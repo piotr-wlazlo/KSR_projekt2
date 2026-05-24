@@ -1,8 +1,8 @@
 package pl.ksr;
 
 public class GaussFunction implements MembershipFunction {
-    private double c;
-    private double sigma;
+    private final double c;
+    private final double sigma;
 
     public GaussFunction(double c, double sigma) {
         this.c = c;
