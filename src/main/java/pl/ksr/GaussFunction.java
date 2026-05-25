@@ -1,16 +1,19 @@
 package pl.ksr;
 
-public class GaussFunction implements MembershipFunction {
+public class GaussFunction<T> implements MembershipFunction<T> {
     private final double c;
     private final double sigma;
+    private final java.util.function.ToDoubleFunction<T> extractor;
 
-    public GaussFunction(double c, double sigma) {
+    public GaussFunction(double c, double sigma, java.util.function.ToDoubleFunction<T> extractor) {
         this.c = c;
         this.sigma = sigma;
+        this.extractor = extractor;
     }
 
     @Override
-    public double getMembership(double x) {
+    public double getMembership(T element) {
+        double x = extractor.applyAsDouble(element);
         return Math.exp(-1.0 / 2.0 * ((x - c) / sigma) * ((x - c) / sigma));
     }
 }

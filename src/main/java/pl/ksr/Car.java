@@ -7,7 +7,7 @@ public record Car(
         String makeName,
         String modelName,
         String fuelType,
-        String segment,
+        Segment segment,
 
         // atrybuty rozmywalne
         int year,
@@ -19,5 +19,5 @@ public record Car(
         double fuelTankVolume,
         double length,
         double wheelbase,
-        int daysonmarket
+        int daysOnMarket
 ) {}

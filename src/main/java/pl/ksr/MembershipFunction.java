@@ -1,5 +1,5 @@
 package pl.ksr;
 
-public interface MembershipFunction {
-    double getMembership(double x);
+public interface MembershipFunction<T> {
+    double getMembership(T element);
 }
