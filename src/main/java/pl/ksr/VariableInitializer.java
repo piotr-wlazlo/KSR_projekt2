@@ -145,4 +145,45 @@ public class VariableInitializer {
         engineCapacity.addLabel("about 4500", about4500);
         engineCapacity.addLabel("over 6000", over6000);
     }
+
+    public static void initializeHorsepower() {
+        List<Integer> horsepowerList = new ArrayList<>();
+        for (int i = 55; i <= 1001; i++) {
+            horsepowerList.add(i);
+        }
+
+        DiscreteUniverse<Integer> horsepowerUniverse = new DiscreteUniverse<Integer>(horsepowerList);
+
+        MembershipFunction<Integer> funcAbout100 = new TrapezoidalFunction<>(
+                55, 55, 120, 170,
+                Integer::doubleValue
+        );
+
+        MembershipFunction<Integer> funcAbout200 = new TrapezoidalFunction<>(
+                120, 170, 230, 280,
+                Integer::doubleValue
+        );
+
+        MembershipFunction<Integer> funcAbout350 = new TrapezoidalFunction<>(
+                230, 280, 380, 450,
+                Integer::doubleValue
+        );
+
+        MembershipFunction<Integer> funcOver450 = new TrapezoidalFunction<>(
+                380, 450, 1001, 1001,
+                Integer::doubleValue
+        );
+
+        FuzzySet<Integer> about100 = new FuzzySet<>(horsepowerUniverse, funcAbout100);
+        FuzzySet<Integer> about200 = new FuzzySet<>(horsepowerUniverse, funcAbout200);
+        FuzzySet<Integer> about350 = new FuzzySet<>(horsepowerUniverse, funcAbout350);
+        FuzzySet<Integer> over450 = new FuzzySet<>(horsepowerUniverse, funcOver450);
+
+        LinguisticVariable<Integer> horsepower = new LinguisticVariable<>("Horsepower", horsepowerUniverse);
+
+        horsepower.addLabel("about 100", about100);
+        horsepower.addLabel("about 200", about200);
+        horsepower.addLabel("about 350", about350);
+        horsepower.addLabel("over 450", over450);
+    }
 }
