@@ -1,7 +1,10 @@
 package pl.ksr;
 
+import pl.ksr.measures.*;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class Main {
     public static void main(String[] args) {
@@ -61,5 +64,48 @@ public class Main {
         System.out.println("membership1995: " + membership1995);
         System.out.println("membership2002: " + membership2002);
         System.out.println("membership2005: " + membership2005);
+
+        //test dzialania miar
+        SummaryEvaluation<String> evaluator = new SummaryEvaluation<>();
+
+        double w = 0.1;
+        evaluator.addMeasure(new DegreeOfTruth<>(), w);
+        evaluator.addMeasure(new DegreeOfImprecision<>(), w);
+        evaluator.addMeasure(new DegreeOfCovering<>(), w);
+        evaluator.addMeasure(new DegreeOfAppropriateness<>(), w);
+        evaluator.addMeasure(new LengthOfASummary<>(), w);
+        evaluator.addMeasure(new DegreeOfQuantifierImprecision<>(), w);
+        evaluator.addMeasure(new DegreeOfQuantifierCardinality<>(), w);
+        evaluator.addMeasure(new DegreeOfSummarizerCardinality<>(), w);
+        evaluator.addMeasure(new DegreeOfQualifierImprecision<>(), w);
+        evaluator.addMeasure(new DegreeOfQualifierCardinality<>(), w);
+
+        List<String> dataset = List.of("Rekord1", "Rekord2", "Rekord3", "Rekord4", "Rekord5");
+
+        DiscreteUniverse<String> universe = new DiscreteUniverse<>(Set.copyOf(dataset));
+
+        DiscreteUniverse<Double> qUniverse = new DiscreteUniverse<>(Set.of(0.0, 0.2, 0.4, 0.6, 0.8, 1.0));
+
+        FuzzySet<Double> qSet = new FuzzySet<>(qUniverse, value -> value);
+        Quantifier quantifier = new Quantifier("Większość", qSet,true);
+
+        FuzzySet<String> sSet = new FuzzySet<>(universe, element -> 0.67);
+        Summarizer<String> summarizer = new Summarizer<>("fajny", sSet);
+
+        FuzzySet<String> wSet = new FuzzySet<>(universe, element -> 0.5);
+        Summarizer<String> qualifier = new Summarizer<>("testowych rekordów", wSet);
+
+        LinguisticSummary<String> summary = new SecondFormSummary<>(
+                quantifier,
+                " test",
+                summarizer,
+                qualifier
+        );
+
+        try {
+            evaluator.evaluate(summary, dataset);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

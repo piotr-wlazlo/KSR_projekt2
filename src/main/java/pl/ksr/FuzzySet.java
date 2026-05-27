@@ -76,6 +76,38 @@ public class FuzzySet<T> {
         return membershipFunction.getMembership(element);
     }
 
+    public double getDegreeOfFuzziness() {
+        int universeSize = universeOfDiscourse.getElements().size();
+
+        if (universeSize == 0) {
+            return 0.0;
+        }
+
+        double supportSize = (double) this.getSupport().getElements().size();
+
+        return supportSize / universeSize;
+    }
+
+    public double getAbsoluteCardinality() {
+        double sigmaCount = 0.0;
+
+        for (T element : universeOfDiscourse.getElements()) {
+            sigmaCount += getMembership(element);
+        }
+
+        return sigmaCount;
+    }
+
+    public double getRelativeCardinality() {
+        int universeSize = universeOfDiscourse.getElements().size();
+
+        if (universeSize == 0) {
+            return 0.0;
+        }
+
+        return getAbsoluteCardinality() / universeSize;
+    }
+
     public boolean isEmpty() {
         return getHeight() == 0.0;
     }
