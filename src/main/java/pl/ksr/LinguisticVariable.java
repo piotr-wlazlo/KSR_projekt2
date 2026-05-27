@@ -6,10 +6,11 @@ import java.util.Set;
 
 public class LinguisticVariable<T> {
     private final String name;
-    private final Set<T> universeOfDiscourse;
+//    private final Set<T> universeOfDiscourse;
+    private final DiscreteUniverse<T> universeOfDiscourse;
     private final Map<String, FuzzySet<T>> labels;
 
-    public LinguisticVariable(String name, Set<T> universeOfDiscourse) {
+    public LinguisticVariable(String name, DiscreteUniverse<T> universeOfDiscourse) {
         this.name = name;
         this.universeOfDiscourse = universeOfDiscourse;
         this.labels = new HashMap<>();
@@ -44,11 +45,12 @@ public class LinguisticVariable<T> {
         return name;
     }
 
-    public Set<T> getUniverseOfDiscourse() {
+    public DiscreteUniverse<T> getUniverseOfDiscourse() {
         return universeOfDiscourse;
     }
 
     public Map<String, FuzzySet<T>> getLabels() {
         return labels;
     }
+
 }

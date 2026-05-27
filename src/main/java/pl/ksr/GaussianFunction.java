@@ -1,11 +1,11 @@
 package pl.ksr;
 
-public class GaussFunction<T> implements MembershipFunction<T> {
+public class GaussianFunction<T> implements MembershipFunction<T> {
     private final double c;
     private final double sigma;
     private final java.util.function.ToDoubleFunction<T> extractor;
 
-    public GaussFunction(double c, double sigma, java.util.function.ToDoubleFunction<T> extractor) {
+    public GaussianFunction(double c, double sigma, java.util.function.ToDoubleFunction<T> extractor) {
         this.c = c;
         this.sigma = sigma;
         this.extractor = extractor;
