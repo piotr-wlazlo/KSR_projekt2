@@ -1,23 +1,28 @@
 package pl.ksr;
 
-public record Quantifier(
-        String label,
-        FuzzySet<Double> fuzzySet,
-        boolean isRelative
-) {
-    public double getMembership(Double value) {
-        return fuzzySet.getMembership(value);
+import pl.ksr.sets.FuzzySet;
+
+public class Quantifier {
+    private final String label;
+    private final FuzzySet fuzzySet;
+    private final boolean isRelative;
+
+
+    public Quantifier(String label, FuzzySet fuzzySet, boolean isRelative) {
+        this.label = label;
+        this.fuzzySet = fuzzySet;
+        this.isRelative = isRelative;
     }
 
-    public double getDegreeOfFuzziness() {
-        return fuzzySet.getDegreeOfFuzziness();
+    public String getLabel() {
+        return label;
     }
 
-    public double getRelativeCardinality() {
-        return fuzzySet.getRelativeCardinality();
+    public boolean isRelative() {
+        return isRelative;
     }
 
-    public FuzzySet<Double> getFuzzySet() {
+    public FuzzySet getFuzzySet() {
         return fuzzySet;
     }
 }

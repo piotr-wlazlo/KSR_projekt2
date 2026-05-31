@@ -2,11 +2,11 @@ package pl.ksr;
 
 import pl.ksr.sets.FuzzySet;
 
-public class Summarizer  {
+public class Qualifier {
     private final LinguisticVariable variable;
     private final String label;
 
-    public Summarizer(LinguisticVariable variable, String label) {
+    public Qualifier(LinguisticVariable variable, String label) {
         this.variable = variable;
         this.label = label;
     }

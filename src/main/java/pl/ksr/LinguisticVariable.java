@@ -1,43 +1,27 @@
 package pl.ksr;
 
-import java.util.HashMap;
+import pl.ksr.sets.FuzzySet;
+import pl.ksr.universe.DiscreteUniverse;
+
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
-public class LinguisticVariable<T> {
+public class LinguisticVariable {
     private final String name;
-//    private final Set<T> universeOfDiscourse;
-    private final DiscreteUniverse<T> universeOfDiscourse;
-    private final Map<String, FuzzySet<T>> labels;
+    private final DiscreteUniverse universeOfDiscourse;
+    private final Map<String, FuzzySet> labels;
 
-    public LinguisticVariable(String name, DiscreteUniverse<T> universeOfDiscourse) {
+    public LinguisticVariable(String name, DiscreteUniverse universeOfDiscourse) {
         this.name = name;
         this.universeOfDiscourse = universeOfDiscourse;
-        this.labels = new HashMap<>();
+        this.labels = new LinkedHashMap<>();
     }
 
-    public boolean addLabel(String label, FuzzySet<T> fuzzySet) {
-        if (labels.containsKey(label)) {
-            return false;
-        } else {
-            this.labels.put(label, fuzzySet);
-            return true;
-        }
+    public void addLabel(String label, FuzzySet fuzzySet) {
+        labels.put(label, fuzzySet);
     }
 
-    public boolean removeLabel(String label) {
-        if (labels.containsKey(label)) {
-            this.labels.remove(label);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public FuzzySet<T> getFuzzySetForLabel(String label) {
-        if (!labels.containsKey(label)) {
-            throw new IllegalArgumentException("Label " + label + " not found.");
-        }
+    public FuzzySet getFuzzySet(String label) {
         return labels.get(label);
     }
 
@@ -45,12 +29,11 @@ public class LinguisticVariable<T> {
         return name;
     }
 
-    public DiscreteUniverse<T> getUniverseOfDiscourse() {
+    public DiscreteUniverse getUniverseOfDiscourse() {
         return universeOfDiscourse;
     }
 
-    public Map<String, FuzzySet<T>> getLabels() {
+    public Map<String, FuzzySet> getLabels() {
         return labels;
     }
-
 }

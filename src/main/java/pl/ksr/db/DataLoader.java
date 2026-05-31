@@ -1,6 +1,7 @@
-package pl.ksr;
+package pl.ksr.db;
 
-import pl.ksr.db.DB;
+import pl.ksr.Car;
+import pl.ksr.Segment;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,7 +37,7 @@ public class DataLoader {
                     car
                 """;
 
-        try (Connection connection = DB.connect();
+        try (Connection connection = Db.connect();
              PreparedStatement statement = connection.prepareStatement(query);
              ResultSet resultSet = statement.executeQuery()) {
 

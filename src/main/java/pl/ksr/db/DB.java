@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class DB {
+public class Db {
     public static Connection connect() throws SQLException {
         try {
             // Get database credentials from DatabaseConfig class
