@@ -96,10 +96,14 @@ public class FuzzySet {
     }
 
     public double degreeOfFuzziness() {
-        return (double) getSupport().cardinality() / universeOfDiscourse.getElements().size();
+        return (double) getSupport().cardinality() / universeOfDiscourse.getUniverseSize();
     }
 
     public MembershipFunction getMembershipFunction() {
         return membershipFunction;
+    }
+
+    public UniverseOfDiscourse getUniverseOfDiscourse() {
+        return universeOfDiscourse;
     }
 }

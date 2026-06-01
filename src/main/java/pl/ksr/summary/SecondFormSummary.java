@@ -60,35 +60,35 @@ public class SecondFormSummary implements LinguisticSummary {
         return quantifier.getLabel() + " cars being/having " + qualifiersLabel + " are/have " + summarizersLabel;
     }
 
-    @Override
-    public double degreeOfTruth() {
-        double numerator = 0.0;
-        double denominator = 0.0;
+    public Quantifier getQuantifier() {
+        return quantifier;
+    }
 
-        for (Car car : cars) {
-            double qualifierMembership = qualifierOperator == LogicalOperator.AND ? 1.0 : 0.0;
-            for (int i = 0; i < qualifiers.size(); i++) {
-                double m = qualifiers.get(i).getFuzzySet().getMembership(qualifierAttributes.get(i).apply(car));
-                qualifierMembership = qualifierOperator == LogicalOperator.AND ? Math.min(qualifierMembership, m) : Math.max(qualifierMembership, m);
-            }
+    public List<Qualifier> getQualifiers() {
+        return qualifiers;
+    }
 
-            double summarizerMembership = summarizerOperator == LogicalOperator.AND ? 1.0 : 0.0;
-            for (int i = 0; i < summarizers.size(); i++) {
-                double m = summarizers.get(i).getFuzzySet().getMembership(summarizerAttributes.get(i).apply(car));
-                summarizerMembership = summarizerOperator == LogicalOperator.AND ? Math.min(summarizerMembership, m) : Math.max(summarizerMembership, m);
-            }
+    public List<Function<Car, Double>> getQualifierAttributes() {
+        return qualifierAttributes;
+    }
 
+    public LogicalOperator getQualifierOperator() {
+        return qualifierOperator;
+    }
 
-            numerator += Math.min(qualifierMembership, summarizerMembership);
-            denominator += qualifierMembership;
-        }
+    public List<Summarizer> getSummarizers() {
+        return summarizers;
+    }
 
-        if (denominator == 0.0) {
-            return 0.0;
-        }
+    public List<Function<Car, Double>> getSummarizerAttributes() {
+        return summarizerAttributes;
+    }
 
-        double r = numerator / denominator;
-        return quantifier.getFuzzySet().getMembership(r);
+    public LogicalOperator getSummarizerOperator() {
+        return summarizerOperator;
+    }
 
+    public List<Car> getCars() {
+        return cars;
     }
 }

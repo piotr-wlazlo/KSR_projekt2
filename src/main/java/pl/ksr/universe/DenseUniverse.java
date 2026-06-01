@@ -36,4 +36,9 @@ public class DenseUniverse implements UniverseOfDiscourse {
 
         return elements;
     }
+
+    @Override
+    public double getUniverseSize() {
+        return max - min;
+    }
 }

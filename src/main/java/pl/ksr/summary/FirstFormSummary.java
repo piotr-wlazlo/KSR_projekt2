@@ -45,19 +45,23 @@ public class FirstFormSummary implements LinguisticSummary {
         return quantifier.getLabel() + " cars are/have " + summarizersLabel;
     }
 
-    @Override
-    public double degreeOfTruth() {
-        double sum = 0.0;
+    public Quantifier getQuantifier() {
+        return quantifier;
+    }
 
-        for (Car car : cars) {
-            double membership = operator == LogicalOperator.AND ? 1.0 : 0.0;
-            for (int i = 0; i < summarizers.size(); i++) {
-                double m = summarizers.get(i).getFuzzySet().getMembership(attributes.get(i).apply(car));
-                membership = operator == LogicalOperator.AND ? Math.min(membership, m) : Math.max(membership, m);
-            }
-            sum += membership;
-        }
-        double r = quantifier.isRelative() ? sum / cars.size() : sum;
-        return quantifier.getFuzzySet().getMembership(r);
+    public List<Summarizer> getSummarizers() {
+        return summarizers;
+    }
+
+    public List<Function<Car, Double>> getAttributes() {
+        return attributes;
+    }
+
+    public LogicalOperator getOperator() {
+        return operator;
+    }
+
+    public List<Car> getCars() {
+        return cars;
     }
 }

@@ -17,4 +17,9 @@ public class DiscreteUniverse implements UniverseOfDiscourse {
     public boolean contains(double x) {
         return elements.contains(x);
     }
+
+    @Override
+    public double getUniverseSize() {
+        return elements.size();
+    }
 }

@@ -14,6 +14,6 @@ public class BellFunction implements MembershipFunction {
 
     @Override
     public double getMembership(double x) {
-        return 1.0 / (1.0 + Math.pow(Math.abs((x - c) / a), 2 * b));
+        return 1.0 / (1.0 + Math.pow(Math.abs((x - c) / a), 2.0 * b));
     }
 }
