@@ -7,6 +7,8 @@ public class DenseUniverse implements UniverseOfDiscourse {
     private final double min;
     private final double max;
 
+    private List<Double> cachedElements;
+
     public DenseUniverse(double min, double max) {
         this.min = min;
         this.max = max;
@@ -27,20 +29,19 @@ public class DenseUniverse implements UniverseOfDiscourse {
 
     @Override
     public List<Double> getElements() {
-        List<Double> elements = new ArrayList<>();
-        double stepSize = (max - min) / 10000.0;
+        if (cachedElements == null) {
+            cachedElements = new ArrayList<>();
+            double stepSize = (max - min) / 10000.0;
 
-        for (int i = 0; i <= 10000; i++) {
-            double d = Math.round((min + i * stepSize) * 100000.0) / 100000.0;
-            elements.add(d);
+            for (int i = 0; i <= 10000; i++) {
+                cachedElements.add(Math.round((min + i * stepSize) * 100000.0) / 100000.0);
+            }
         }
-
-        return elements;
+        return cachedElements;
     }
 
     @Override
     public double getUniverseSize() {
-//        return max - min;
         return getElements().size();
     }
 }
