@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FuzzySet {
-    private UniverseOfDiscourse universeOfDiscourse;
-    private MembershipFunction membershipFunction;
+    private final UniverseOfDiscourse universeOfDiscourse;
+    private final MembershipFunction membershipFunction;
 
     public FuzzySet(UniverseOfDiscourse universeOfDiscourse, MembershipFunction membershipFunction) {
         this.universeOfDiscourse = universeOfDiscourse;

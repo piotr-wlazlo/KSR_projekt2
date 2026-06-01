@@ -12,9 +12,9 @@ import java.util.List;
 
 public class VariableInitializer {
     public static LinguisticVariable initializeYear() {
-        List yearList = new ArrayList();
+        List<Double> yearList = new ArrayList();
         for (int i = 1981; i <= 2021; i++) {
-            yearList.add(i);
+            yearList.add((double) i);
         }
 
         DiscreteUniverse yearUniverse = new DiscreteUniverse(yearList);
@@ -51,9 +51,9 @@ public class VariableInitializer {
     }
 
     public static LinguisticVariable initializePrice() {
-        List priceList = new ArrayList();
+        List<Double> priceList = new ArrayList();
         for (int i = 165; i <= 3299995; i++) {
-            priceList.add(i);
+            priceList.add((double) i);
         }
 
         DiscreteUniverse priceUniverse = new DiscreteUniverse(priceList);
@@ -90,9 +90,9 @@ public class VariableInitializer {
     }
 
     public static LinguisticVariable initializeEngineCapacity() {
-        List engineCapacityList = new ArrayList();
+        List<Double>engineCapacityList = new ArrayList();
         for (int i = 1000; i <= 84000; i++) {
-            engineCapacityList.add(i);
+            engineCapacityList.add((double) i);
         }
 
         DiscreteUniverse engineCapacityUniverse = new DiscreteUniverse(engineCapacityList);
@@ -129,9 +129,9 @@ public class VariableInitializer {
     }
 
     public static LinguisticVariable initializeHorsepower() {
-        List horsepowerList = new ArrayList();
+        List<Double>horsepowerList = new ArrayList();
         for (int i = 55; i <= 1001; i++) {
-            horsepowerList.add(i);
+            horsepowerList.add((double) i);
         }
 
         DiscreteUniverse horsepowerUniverse = new DiscreteUniverse(horsepowerList);
@@ -168,9 +168,9 @@ public class VariableInitializer {
     }
 
     public static LinguisticVariable initializeTorque() {
-        List torqueList = new ArrayList();
+        List<Double>torqueList = new ArrayList();
         for (int i = 79; i <= 1280; i++) {
-            torqueList.add(i);
+            torqueList.add((double) i);
         }
 
         DiscreteUniverse torqueUniverse = new DiscreteUniverse(torqueList);
@@ -207,9 +207,9 @@ public class VariableInitializer {
     }
 
     public static LinguisticVariable initializeMileage() {
-        List mileageList = new ArrayList();
+        List<Double>mileageList = new ArrayList();
         for (int i = 0; i <= 6904811; i++) {
-            mileageList.add(i);
+            mileageList.add((double) i);
         }
 
         DiscreteUniverse mileageUniverse = new DiscreteUniverse(mileageList);
@@ -246,9 +246,9 @@ public class VariableInitializer {
     }
 
     public static LinguisticVariable initializeFuelTankCapacity() {
-        List fuelTankCapacityList = new ArrayList();
+        List<Double>fuelTankCapacityList = new ArrayList();
         for (int i = 29; i <= 242; i++) {
-            fuelTankCapacityList.add(i);
+            fuelTankCapacityList.add((double) i);
         }
 
         DiscreteUniverse fuelTankUniverse = new DiscreteUniverse(fuelTankCapacityList);
@@ -285,9 +285,9 @@ public class VariableInitializer {
     }
 
     public static LinguisticVariable initializeLength() {
-        List lengthList = new ArrayList();
+        List<Double>lengthList = new ArrayList();
         for (int i = 269; i <= 757; i++) {
-            lengthList.add(i);
+            lengthList.add((double) i);
         }
 
         DiscreteUniverse lengthUniverse = new DiscreteUniverse(lengthList);
@@ -324,9 +324,9 @@ public class VariableInitializer {
     }
 
     public static LinguisticVariable initializeWheelbase() {
-        List wheelbaseList = new ArrayList();
+        List<Double>wheelbaseList = new ArrayList();
         for (int i = 187; i <= 519; i++) {
-            wheelbaseList.add(i);
+            wheelbaseList.add((double) i);
         }
 
         DiscreteUniverse wheelbaseUniverse = new DiscreteUniverse(wheelbaseList);
@@ -363,9 +363,9 @@ public class VariableInitializer {
     }
 
     public static LinguisticVariable initializeDaysOnMarket() {
-        List daysOnMarketList = new ArrayList();
+        List<Double>daysOnMarketList = new ArrayList();
         for (int i = 0; i <= 3573; i++) {
-            daysOnMarketList.add(i);
+            daysOnMarketList.add((double) i);
         }
 
         DiscreteUniverse daysOnMarketUniverse = new DiscreteUniverse(daysOnMarketList);

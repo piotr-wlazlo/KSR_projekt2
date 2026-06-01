@@ -31,7 +31,8 @@ public class DenseUniverse implements UniverseOfDiscourse {
         double stepSize = (max - min) / 10000.0;
 
         for (int i = 0; i <= 10000; i++) {
-            elements.add(Math.round((min + i * stepSize) * 100000.0) / 100000.0);
+            double d = Math.round((min + i * stepSize) * 100000.0) / 100000.0;
+            elements.add(d);
         }
 
         return elements;
@@ -39,6 +40,7 @@ public class DenseUniverse implements UniverseOfDiscourse {
 
     @Override
     public double getUniverseSize() {
-        return max - min;
+//        return max - min;
+        return getElements().size();
     }
 }
