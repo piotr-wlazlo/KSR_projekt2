@@ -3,18 +3,22 @@ package pl.ksr.gui;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTreeCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import pl.ksr.*;
 import pl.ksr.db.DataLoader;
 import pl.ksr.measures.*;
+import pl.ksr.membershipFunctions.GaussianFunction;
+import pl.ksr.membershipFunctions.MembershipFunction;
 import pl.ksr.membershipFunctions.TrapezoidalFunction;
 import pl.ksr.sets.FuzzySet;
 import pl.ksr.summary.FirstFormSummary;
@@ -37,138 +41,290 @@ public class MainApp extends Application {
     private Map<String, Function<Car, Double>> attributeExtractors;
     private List<Quantifier> allQuantifiers;
 
+    private List<TextField> weightFields;
+
+    private CheckBoxTreeItem<String> featureTreeRootBasic;
+    private CheckBoxTreeItem<String> featureTreeRootAdvanced;
+
+    private double[] activeWeights = {0.5, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05};
+
+    static class SelectedFeature {
+        LinguisticVariable variable;
+        String label;
+        Function<Car, Double> extractor;
+
+        SelectedFeature(LinguisticVariable v, String l, Function<Car, Double> e) {
+            variable = v;
+            label = l;
+            extractor = e;
+        }
+    }
+
+    static class Partition {
+        List<SelectedFeature> qualifiers;
+        List<SelectedFeature> summarizers;
+
+        Partition(List<SelectedFeature> q, List<SelectedFeature> s) {
+            this.qualifiers = q;
+            this.summarizers = s;
+        }
+    }
+
     @Override
     public void start(Stage primaryStage) {
         cars = DataLoader.loadFromDb();
         initializeData();
 
+        featureTreeRootBasic = new CheckBoxTreeItem<>("Features");
+        featureTreeRootBasic.setExpanded(true);
+        featureTreeRootAdvanced = new CheckBoxTreeItem<>("Features");
+        featureTreeRootAdvanced.setExpanded(true);
+        populateFeatureTrees();
+
         TabPane tabPane = new TabPane();
 
-        Tab basicTab = new Tab("Summary Generation");
+
+        Tab basicTab = new Tab("Basic");
         basicTab.setClosable(false);
-        VBox basicLayout = new VBox(15);
-        basicLayout.setPadding(new Insets(15));
+        VBox basicGeneratorPanel = createGeneratorPanel(primaryStage, featureTreeRootBasic, null);
+        basicTab.setContent(basicGeneratorPanel);
 
-        HBox topPanelsBox = new HBox(20);
 
-        VBox quantBox = new VBox(5);
-        quantBox.setPrefWidth(160);
-        Label quantLabel = new Label("Quantifiers (Q):");
-        quantLabel.setStyle("-fx-font-weight: bold;");
-        quantBox.getChildren().add(quantLabel);
 
-        ToggleGroup quantGroup = new ToggleGroup();
-        for (Quantifier q : allQuantifiers) {
-            RadioButton rb = new RadioButton(q.getLabel());
-            rb.setToggleGroup(quantGroup);
-            rb.setUserData(q);
-            quantBox.getChildren().add(rb);
-        }
-        if (!quantGroup.getToggles().isEmpty()) {
-            quantGroup.getToggles().get(0).setSelected(true);
-        }
+        Tab advancedTab = new Tab("Advanced");
+        advancedTab.setClosable(false);
 
-        VBox qualBox = new VBox(5);
-        Label qualLabel = new Label("Qualifiers (W) - Optional:");
-        qualLabel.setStyle("-fx-font-weight: bold;");
-        qualBox.getChildren().add(qualLabel);
-        TreeView<String> qualifierTree = createVariablesTree("Select Qualifiers");
-        qualifierTree.setPrefHeight(250);
-        ComboBox<LogicalOperator> qualOpCombo = new ComboBox<>();
-        qualOpCombo.getItems().addAll(LogicalOperator.AND, LogicalOperator.OR);
-        qualOpCombo.setValue(LogicalOperator.AND);
-        qualBox.getChildren().addAll(qualifierTree, new HBox(5, new Label("Operator:"), qualOpCombo));
+        HBox settingsRow = new HBox(15);
 
-        VBox sumBox = new VBox(5);
-        Label sumLabel = new Label("Summarizers (S) - Required:");
-        sumLabel.setStyle("-fx-font-weight: bold;");
-        sumBox.getChildren().add(sumLabel);
-        TreeView<String> summarizerTree = createVariablesTree("Select Summarizers");
-        summarizerTree.setPrefHeight(250);
-        ComboBox<LogicalOperator> sumOpCombo = new ComboBox<>();
-        sumOpCombo.getItems().addAll(LogicalOperator.AND, LogicalOperator.OR);
-        sumOpCombo.setValue(LogicalOperator.AND);
-        sumBox.getChildren().addAll(summarizerTree, new HBox(5, new Label("Operator:"), sumOpCombo));
+        TitledPane weightsPane = new TitledPane();
+        weightsPane.setText("1. Quality Measures Weights");
+        weightsPane.setCollapsible(false);
 
-        topPanelsBox.getChildren().addAll(quantBox, qualBox, sumBox);
-
-        VBox middleBox = new VBox(10);
-
-        Button toggleWeightsBtn = new Button("Show/Edit Quality Measure Weights ▼");
-        toggleWeightsBtn.setStyle("-fx-font-size: 11px; -fx-base: #f0f0f0;");
-
-        VBox weightsContainer = new VBox(10);
-        weightsContainer.setVisible(false);
-        weightsContainer.setManaged(false);
-
-        Label weightsLabel = new Label("Quality measures weights (T1 - T11):");
-        weightsLabel.setStyle("-fx-font-weight: bold;");
         GridPane weightsGrid = new GridPane();
-        weightsGrid.setHgap(15);
+        weightsGrid.setHgap(10);
         weightsGrid.setVgap(10);
 
-        List<TextField> weightFields = new ArrayList<>();
+        weightFields = new ArrayList<>();
         for (int i = 1; i <= 11; i++) {
             TextField tf = new TextField();
-            tf.setPrefWidth(50);
-
-            if (i == 1) {
-                tf.setText("0.5");
-            } else {
-                tf.setText("0.05");
-            }
+            tf.setPrefWidth(45);
+            tf.setText(i == 1 ? "0.5" : "0.05");
             weightFields.add(tf);
 
-            int row = (i - 1) / 6;
-            int col = (i - 1) % 6;
-            HBox cell = new HBox(5, new Label("T" + i + ":"), tf);
+            int row = (i - 1) / 4;
+            int col = (i - 1) % 4;
+
+            HBox cell = new HBox(3, new Label("T" + i + ":"), tf);
             cell.setAlignment(Pos.CENTER_LEFT);
             weightsGrid.add(cell, col, row);
         }
 
-        weightsContainer.getChildren().addAll(weightsLabel, weightsGrid);
-        middleBox.getChildren().addAll(toggleWeightsBtn, weightsContainer);
+        Button saveWeightsBtn = new Button("Save New Weights");
+        saveWeightsBtn.setStyle("-fx-font-weight: bold; -fx-base: #DE68A5;");
 
-        toggleWeightsBtn.setOnAction(e -> {
-            boolean isCurrentlyVisible = weightsContainer.isVisible();
-            weightsContainer.setVisible(!isCurrentlyVisible);
-            weightsContainer.setManaged(!isCurrentlyVisible);
+        saveWeightsBtn.setOnAction(e -> {
+            try {
+                double[] tempWeights = new double[11];
+                double sumWeights = 0.0;
+                for (int i = 0; i < 11; i++) {
+                    tempWeights[i] = Double.parseDouble(weightFields.get(i).getText().replace(",", "."));
+                    sumWeights += tempWeights[i];
+                }
 
-            if (!isCurrentlyVisible) {
-                toggleWeightsBtn.setText("Hide Quality Measure Weights ▲");
-            } else {
-                toggleWeightsBtn.setText("Show/Edit Quality Measure Weights ▼");
+                if (Math.abs(sumWeights - 1.0) > 0.0001) {
+                    new Alert(Alert.AlertType.WARNING,
+                            "The sum of weights must be exactly 1.0!\n" +
+                                    "Current sum is: " + String.format(Locale.US, "%.4f", sumWeights) + "\n" +
+                                    "Please adjust the weights before saving.").show();
+                    return;
+                }
+
+                System.arraycopy(tempWeights, 0, activeWeights, 0, 11);
+                new Alert(Alert.AlertType.INFORMATION, "New weights saved and applied successfully!").show();
+            } catch (NumberFormatException ex) {
+                new Alert(Alert.AlertType.ERROR, "Invalid weight format! Use numbers only.").show();
             }
         });
 
-        TableView<SummaryResult> table = new TableView<>();
-        table.setPrefHeight(250);
+        VBox weightsContentBox = new VBox(10, weightsGrid, saveWeightsBtn);
+        weightsContentBox.setPadding(new Insets(10));
+        weightsPane.setContent(weightsContentBox);
 
-        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        TitledPane newQuantifierPane = new TitledPane();
+        newQuantifierPane.setText("2. New Quantifier (Trapezoidal)");
+        newQuantifierPane.setCollapsible(false);
 
-        TableColumn<SummaryResult, String> textCol = new TableColumn<>("Summary text");
-        textCol.setCellValueFactory(new PropertyValueFactory<>("summaryText"));
-        textCol.setPrefWidth(350);
+        GridPane qGrid = new GridPane();
+        qGrid.setHgap(8); qGrid.setVgap(8); qGrid.setPadding(new Insets(10));
 
-        TableColumn<SummaryResult, Double> optCol = new TableColumn<>("Final quality measure");
-        optCol.setCellValueFactory(new PropertyValueFactory<>("optimalMeasure"));
-        optCol.setPrefWidth(160);
-        setupFormattedColumn(optCol);
+        TextField qNameField = new TextField(); qNameField.setPromptText("Name (e.g. 70%)");
+        ComboBox<String> qUniverseCombo = new ComboBox<>();
+        qUniverseCombo.getItems().addAll("Relative [0.0 - 1.0]", "Absolute");
+        qUniverseCombo.getSelectionModel().selectFirst();
 
-        table.getColumns().addAll(textCol, optCol);
+        TextField qA = new TextField(); qA.setPrefWidth(45); qA.setPromptText("a");
+        TextField qB = new TextField(); qB.setPrefWidth(45); qB.setPromptText("b");
+        TextField qC = new TextField(); qC.setPrefWidth(45); qC.setPromptText("c");
+        TextField qD = new TextField(); qD.setPrefWidth(45); qD.setPromptText("d");
 
-        for (int i = 1; i <= 11; i++) {
-            TableColumn<SummaryResult, Double> tCol = new TableColumn<>("T" + i);
-            tCol.setCellValueFactory(new PropertyValueFactory<>("t" + i));
-            tCol.setPrefWidth(55);
-            setupFormattedColumn(tCol);
-            table.getColumns().add(tCol);
+        Button addQuantifierBtn = new Button("Add Quantifier");
+        addQuantifierBtn.setStyle("-fx-font-weight: bold; -fx-base: #DE68A5;");
+
+        qGrid.addRow(0, new Label("Name:"), qNameField);
+        qGrid.addRow(1, new Label("Universe:"), qUniverseCombo);
+        qGrid.addRow(2, new Label("Params:"), new HBox(5, qA, qB, qC, qD));
+        qGrid.addRow(3, addQuantifierBtn);
+        newQuantifierPane.setContent(qGrid);
+
+        addQuantifierBtn.setOnAction(e -> {
+            try {
+                String name = qNameField.getText();
+                boolean isRelative = qUniverseCombo.getValue().startsWith("Relative");
+                double a = Double.parseDouble(qA.getText()); double b = Double.parseDouble(qB.getText());
+                double c = Double.parseDouble(qC.getText()); double d = Double.parseDouble(qD.getText());
+
+                DenseUniverse uni = isRelative ? new DenseUniverse(0.0, 1.0) : new DenseUniverse(0.0, 2335706.0);
+                allQuantifiers.add(new Quantifier(name, new FuzzySet(uni, new TrapezoidalFunction(a, b, c, d)), isRelative));
+
+                new Alert(Alert.AlertType.INFORMATION, "Quantifier added successfully!").show();
+                qNameField.clear(); qA.clear(); qB.clear(); qC.clear(); qD.clear();
+            } catch (Exception ex) {
+                new Alert(Alert.AlertType.ERROR, "Invalid parameters! Please enter numbers.").show();
+            }
+        });
+
+        TitledPane newFeaturePane = new TitledPane();
+        newFeaturePane.setText("3. New Feature Label");
+        newFeaturePane.setCollapsible(false);
+
+        GridPane fGrid = new GridPane();
+        fGrid.setHgap(8); fGrid.setVgap(8); fGrid.setPadding(new Insets(10));
+
+        ComboBox<String> varCombo = new ComboBox<>();
+        for(LinguisticVariable lv : allVariables) varCombo.getItems().add(lv.getName());
+        varCombo.getSelectionModel().selectFirst();
+
+        TextField fNameField = new TextField(); fNameField.setPromptText("e.g. very cheap");
+
+        ComboBox<String> fFuncTypeCombo = new ComboBox<>();
+        fFuncTypeCombo.getItems().addAll("Trapezoidal", "Gaussian");
+        fFuncTypeCombo.getSelectionModel().selectFirst();
+
+        TextField fP1 = new TextField(); fP1.setPrefWidth(45); fP1.setPromptText("a");
+        TextField fP2 = new TextField(); fP2.setPrefWidth(45); fP2.setPromptText("b");
+        TextField fP3 = new TextField(); fP3.setPrefWidth(45); fP3.setPromptText("c");
+        TextField fP4 = new TextField(); fP4.setPrefWidth(45); fP4.setPromptText("d");
+
+        HBox fParamsBox = new HBox(5, fP1, fP2, fP3, fP4);
+
+        // Logika przełączania interfejsu (Trapez/Gauss)
+        fFuncTypeCombo.setOnAction(e -> {
+            fParamsBox.getChildren().clear();
+            fP1.clear(); fP2.clear(); fP3.clear(); fP4.clear();
+
+            if (fFuncTypeCombo.getValue().equals("Trapezoidal")) {
+                fP1.setPromptText("a"); fP1.setPrefWidth(45);
+                fP2.setPromptText("b"); fP2.setPrefWidth(45);
+                fP3.setPromptText("c"); fP3.setPrefWidth(45);
+                fP4.setPromptText("d"); fP4.setPrefWidth(45);
+                fParamsBox.getChildren().addAll(fP1, fP2, fP3, fP4);
+            } else {
+                fP1.setPromptText("center (c)"); fP1.setPrefWidth(80);
+                fP2.setPromptText("width (σ)"); fP2.setPrefWidth(80);
+                fParamsBox.getChildren().addAll(fP1, fP2);
+            }
+        });
+
+        Button addFeatureBtn = new Button("Add Feature Label");
+        addFeatureBtn.setStyle("-fx-font-weight: bold; -fx-base: #DE68A5;");
+
+        fGrid.addRow(0, new Label("Attribute:"), varCombo);
+        fGrid.addRow(1, new Label("Label:"), fNameField);
+        fGrid.addRow(2, new Label("Function:"), fFuncTypeCombo);
+        fGrid.addRow(3, new Label("Params:"), fParamsBox);
+        fGrid.addRow(4, addFeatureBtn);
+        newFeaturePane.setContent(fGrid);
+
+        addFeatureBtn.setOnAction(e -> {
+            try {
+                String varName = varCombo.getValue();
+                String labelName = fNameField.getText();
+
+                MembershipFunction func;
+
+                if (fFuncTypeCombo.getValue().equals("Trapezoidal")) {
+                    double a = Double.parseDouble(fP1.getText());
+                    double b = Double.parseDouble(fP2.getText());
+                    double c = Double.parseDouble(fP3.getText());
+                    double d = Double.parseDouble(fP4.getText());
+                    func = new TrapezoidalFunction(a, b, c, d);
+                } else {
+                    double center = Double.parseDouble(fP1.getText());
+                    double sigma = Double.parseDouble(fP2.getText());
+                    func = new GaussianFunction(center, sigma);
+                }
+
+                LinguisticVariable targetVar = allVariables.stream().filter(v -> v.getName().equals(varName)).findFirst().orElseThrow();
+                targetVar.addLabel(labelName, new FuzzySet(targetVar.getUniverseOfDiscourse(), func));
+
+                populateFeatureTrees();
+                new Alert(Alert.AlertType.INFORMATION, "Label added successfully!").show();
+                fNameField.clear(); fP1.clear(); fP2.clear(); fP3.clear(); fP4.clear();
+            } catch (Exception ex) {
+                new Alert(Alert.AlertType.ERROR, "Invalid parameters! Please enter correct numbers.").show();
+            }
+        });
+
+        // Wrzucamy ustawienia do HBoxa i pozwalamy im równo się rozciągnąć
+        HBox.setHgrow(weightsPane, Priority.ALWAYS);
+        HBox.setHgrow(newQuantifierPane, Priority.ALWAYS);
+        HBox.setHgrow(newFeaturePane, Priority.ALWAYS);
+        settingsRow.getChildren().addAll(weightsPane, newQuantifierPane, newFeaturePane);
+
+        // Złożenie zakładki Advanced
+        VBox advancedGeneratorPanel = createGeneratorPanel(primaryStage, featureTreeRootAdvanced, settingsRow);
+        advancedTab.setContent(advancedGeneratorPanel);
+
+        tabPane.getTabs().addAll(basicTab, advancedTab);
+        Scene scene = new Scene(tabPane, 1350, 750);
+        primaryStage.setTitle("Linguistic Summaries Generator");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+
+    // ==========================================
+    // UNIWERSALNY GENERATOR UI (Metoda Budująca)
+    // ==========================================
+    private VBox createGeneratorPanel(Stage primaryStage, CheckBoxTreeItem<String> treeRoot, Node extraTopContent) {
+        VBox layout = new VBox(15);
+        layout.setPadding(new Insets(15));
+
+        HBox topSection = new HBox(20);
+
+        VBox featuresBox = new VBox(5);
+        featuresBox.setPrefWidth(260);
+        featuresBox.setMinWidth(260);
+
+        Label featuresLabel = new Label("Select up to 3 features:");
+        featuresLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+
+        TreeView<String> featureTree = new TreeView<>(treeRoot);
+        featureTree.setCellFactory(CheckBoxTreeCell.forTreeView());
+        featureTree.setPrefHeight(230);
+        featuresBox.getChildren().addAll(featuresLabel, featureTree);
+
+        topSection.getChildren().add(featuresBox);
+
+        if (extraTopContent != null) {
+            HBox.setHgrow(extraTopContent, Priority.ALWAYS);
+            topSection.getChildren().add(extraTopContent);
         }
 
         HBox actionButtonsBox = new HBox(15);
         actionButtonsBox.setAlignment(Pos.CENTER_LEFT);
 
-        Button generateBtn = new Button("Generate and Calculate");
+        Button generateBtn = new Button("Generate All Combinations");
         generateBtn.setStyle("-fx-font-weight: bold; -fx-base: #DE68A5;");
 
         Button saveBtn = new Button("Save selected to file");
@@ -176,72 +332,84 @@ public class MainApp extends Application {
 
         actionButtonsBox.getChildren().addAll(generateBtn, saveBtn);
 
+        TableView<SummaryResult> table = new TableView<>();
+        table.setPrefHeight(350);
+        VBox.setVgrow(table, Priority.ALWAYS);
+        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
+        TableColumn<SummaryResult, String> textCol = new TableColumn<>("Summary text");
+        textCol.setCellValueFactory(new PropertyValueFactory<>("summaryText"));
+        textCol.setPrefWidth(420);
+
+        TableColumn<SummaryResult, Double> optCol = new TableColumn<>("Final quality measure");
+        optCol.setCellValueFactory(new PropertyValueFactory<>("optimalMeasure"));
+        optCol.setPrefWidth(140);
+        setupFormattedColumn(optCol);
+
+        table.getColumns().addAll(textCol, optCol);
+
+        for (int i = 1; i <= 11; i++) {
+            TableColumn<SummaryResult, Double> tCol = new TableColumn<>("T" + i);
+            tCol.setCellValueFactory(new PropertyValueFactory<>("t" + i));
+            tCol.setPrefWidth(48);
+            setupFormattedColumn(tCol);
+            table.getColumns().add(tCol);
+        }
+
         generateBtn.setOnAction(e -> {
             try {
-                double[] w = new double[11];
-                for (int i = 0; i < 11; i++) {
-                    w[i] = Double.parseDouble(weightFields.get(i).getText().replace(",", "."));
-                }
+                List<SelectedFeature> selectedFeatures = new ArrayList<>();
+                extractFeatures(treeRoot, selectedFeatures);
 
-                Toggle selectedToggle = quantGroup.getSelectedToggle();
-                if (selectedToggle == null) {
-                    new Alert(Alert.AlertType.WARNING, "You must select a quantifier!").show();
-                    return;
-                }
-                Quantifier selectedQ = (Quantifier) selectedToggle.getUserData();
-
-                List<Qualifier> selectedQualifiers = new ArrayList<>();
-                List<Function<Car, Double>> qualFunctions = new ArrayList<>();
-                extractQualifiers(qualifierTree.getRoot(), selectedQualifiers, qualFunctions);
-
-                List<Summarizer> selectedSummarizers = new ArrayList<>();
-                List<Function<Car, Double>> sumFunctions = new ArrayList<>();
-                extractSummarizers(summarizerTree.getRoot(), selectedSummarizers, sumFunctions);
-
-                if (selectedSummarizers.isEmpty()) {
-                    new Alert(Alert.AlertType.WARNING, "You must select at least one summarizer!").show();
+                if (selectedFeatures.isEmpty() || selectedFeatures.size() > 3) {
+                    new Alert(Alert.AlertType.WARNING, "Please select between 1 and 3 features!").show();
                     return;
                 }
 
-                pl.ksr.summary.LinguisticSummary summary;
-                if (selectedQualifiers.isEmpty()) {
-                    summary = new FirstFormSummary(selectedQ, selectedSummarizers, sumFunctions, sumOpCombo.getValue(), cars);
-                } else {
-                    summary = new SecondFormSummary(selectedQ, selectedQualifiers, qualFunctions, qualOpCombo.getValue(),
-                            selectedSummarizers, sumFunctions, sumOpCombo.getValue(), cars);
-                }
+                double[] w = activeWeights;
 
                 To toMeasure = new To();
-                toMeasure.addMeasure(new T1(), w[0]);
-                toMeasure.addMeasure(new T2(), w[1]);
-                toMeasure.addMeasure(new T3(), w[2]);
-                toMeasure.addMeasure(new T4(), w[3]);
-                toMeasure.addMeasure(new T5(), w[4]);
-                toMeasure.addMeasure(new T6(), w[5]);
-                toMeasure.addMeasure(new T7(), w[6]);
-                toMeasure.addMeasure(new T8(), w[7]);
-                toMeasure.addMeasure(new T9(), w[8]);
-                toMeasure.addMeasure(new T10(), w[9]);
+                toMeasure.addMeasure(new T1(), w[0]); toMeasure.addMeasure(new T2(), w[1]);
+                toMeasure.addMeasure(new T3(), w[2]); toMeasure.addMeasure(new T4(), w[3]);
+                toMeasure.addMeasure(new T5(), w[4]); toMeasure.addMeasure(new T6(), w[5]);
+                toMeasure.addMeasure(new T7(), w[6]); toMeasure.addMeasure(new T8(), w[7]);
+                toMeasure.addMeasure(new T9(), w[8]); toMeasure.addMeasure(new T10(), w[9]);
                 toMeasure.addMeasure(new T11(), w[10]);
 
-                double optimal = toMeasure.calculate(summary);
+                List<SummaryResult> resultsList = new ArrayList<>();
+                List<Partition> partitions = generatePartitions(selectedFeatures);
 
-                double t1 = new T1().calculate(summary);
-                double t2 = new T2().calculate(summary);
-                double t3 = new T3().calculate(summary);
-                double t4 = new T4().calculate(summary);
-                double t5 = new T5().calculate(summary);
-                double t6 = new T6().calculate(summary);
-                double t7 = new T7().calculate(summary);
-                double t8 = new T8().calculate(summary);
-                double t9 = new T9().calculate(summary);
-                double t10 = new T10().calculate(summary);
-                double t11 = new T11().calculate(summary);
+                for (Quantifier q : allQuantifiers) {
+                    for (Partition partition : partitions) {
+                        List<Qualifier> qualifiers = partition.qualifiers.stream().map(f -> new Qualifier(f.variable, f.label)).toList();
+                        List<Function<Car, Double>> qualExtractors = partition.qualifiers.stream().map(f -> f.extractor).toList();
 
-                table.getItems().add(new SummaryResult(summary.getSummary(), optimal, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11));
+                        List<Summarizer> summarizers = partition.summarizers.stream().map(f -> new Summarizer(f.variable, f.label)).toList();
+                        List<Function<Car, Double>> sumExtractors = partition.summarizers.stream().map(f -> f.extractor).toList();
 
-            } catch (NumberFormatException ex) {
-                new Alert(Alert.AlertType.ERROR, "Error in weight format! Make sure to use numbers.").show();
+                        pl.ksr.summary.LinguisticSummary summary;
+                        if (qualifiers.isEmpty()) {
+                            summary = new FirstFormSummary(q, summarizers, sumExtractors, LogicalOperator.AND, cars);
+                        } else {
+                            summary = new SecondFormSummary(q, qualifiers, qualExtractors, LogicalOperator.AND, summarizers, sumExtractors, LogicalOperator.AND, cars);
+                        }
+
+                        double optimal = toMeasure.calculate(summary);
+                        double t1 = new T1().calculate(summary); double t2 = new T2().calculate(summary);
+                        double t3 = new T3().calculate(summary); double t4 = new T4().calculate(summary);
+                        double t5 = new T5().calculate(summary); double t6 = new T6().calculate(summary);
+                        double t7 = new T7().calculate(summary); double t8 = new T8().calculate(summary);
+                        double t9 = new T9().calculate(summary); double t10 = new T10().calculate(summary);
+                        double t11 = new T11().calculate(summary);
+
+                        resultsList.add(new SummaryResult(summary.getSummary(), optimal, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11));
+                    }
+                }
+
+                resultsList.sort((r1, r2) -> Double.compare(r2.getOptimalMeasure(), r1.getOptimalMeasure()));
+                table.getItems().clear();
+                table.getItems().addAll(resultsList);
+
             } catch (Exception ex) {
                 ex.printStackTrace();
                 new Alert(Alert.AlertType.ERROR, "Error during generation: " + ex.getMessage()).show();
@@ -250,7 +418,6 @@ public class MainApp extends Application {
 
         saveBtn.setOnAction(e -> {
             List<SummaryResult> selectedItems = new ArrayList<>(table.getSelectionModel().getSelectedItems());
-
             if (selectedItems.isEmpty()) {
                 new Alert(Alert.AlertType.WARNING, "Please select at least one summary from the table!").show();
                 return;
@@ -278,19 +445,59 @@ public class MainApp extends Application {
             }
         });
 
-        basicLayout.getChildren().addAll(topPanelsBox, middleBox, actionButtonsBox, table);
-        basicTab.setContent(basicLayout);
-
-        Tab advancedTab = new Tab("Advanced");
-        advancedTab.setClosable(false);
-
-        tabPane.getTabs().addAll(basicTab, advancedTab);
-        Scene scene = new Scene(tabPane, 1150, 750);
-        primaryStage.setTitle("KSR Project 2 - Linguistic Summaries");
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        layout.getChildren().addAll(topSection, actionButtonsBox, table);
+        return layout;
     }
 
+
+    private void populateFeatureTrees() {
+        populateTree(featureTreeRootBasic);
+        populateTree(featureTreeRootAdvanced);
+    }
+
+    private void populateTree(CheckBoxTreeItem<String> root) {
+        root.getChildren().clear();
+        for (LinguisticVariable var : allVariables) {
+            CheckBoxTreeItem<String> varItem = new CheckBoxTreeItem<>(var.getName());
+            for (String label : var.getLabels().keySet()) {
+                CheckBoxTreeItem<String> labelItem = new CheckBoxTreeItem<>(label);
+                varItem.getChildren().add(labelItem);
+            }
+            root.getChildren().add(varItem);
+        }
+    }
+
+    private List<Partition> generatePartitions(List<SelectedFeature> selected) {
+        List<Partition> partitions = new ArrayList<>();
+        int n = selected.size();
+        for (int mask = 1; mask < (1 << n); mask++) {
+            List<SelectedFeature> qualFeats = new ArrayList<>();
+            List<SelectedFeature> sumFeats = new ArrayList<>();
+            for (int i = 0; i < n; i++) {
+                if ((mask & (1 << i)) != 0) {
+                    sumFeats.add(selected.get(i));
+                } else {
+                    qualFeats.add(selected.get(i));
+                }
+            }
+            partitions.add(new Partition(qualFeats, sumFeats));
+        }
+        return partitions;
+    }
+
+    private void extractFeatures(TreeItem<String> root, List<SelectedFeature> list) {
+        for (TreeItem<String> varNode : root.getChildren()) {
+            String varName = varNode.getValue();
+            LinguisticVariable variable = allVariables.stream().filter(v -> v.getName().equals(varName)).findFirst().orElse(null);
+            if (variable == null) continue;
+
+            for (TreeItem<String> labelNode : varNode.getChildren()) {
+                if (((CheckBoxTreeItem<String>) labelNode).isSelected()) {
+                    list.add(new SelectedFeature(variable, labelNode.getValue(), attributeExtractors.get(varName)));
+                }
+            }
+        }
+    }
 
     private void setupFormattedColumn(TableColumn<SummaryResult, Double> column) {
         column.setCellFactory(tc -> new TableCell<SummaryResult, Double>() {
@@ -300,7 +507,6 @@ public class MainApp extends Application {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    // Wymusza np. "1.00", "0.30"
                     setText(String.format(Locale.US, "%.2f", item));
                 }
             }
@@ -334,13 +540,12 @@ public class MainApp extends Application {
         DenseUniverse relativeUniverse = new DenseUniverse(0.0, 1.0);
         DenseUniverse absoluteUniverse = new DenseUniverse(0.0, 2335706.0);
 
-        allQuantifiers = List.of(
+        allQuantifiers = new ArrayList<>(List.of(
                 new Quantifier("almost none", new FuzzySet(relativeUniverse, new TrapezoidalFunction(0.0, 0.0, 0.10, 0.15)), true),
                 new Quantifier("few", new FuzzySet(relativeUniverse, new TrapezoidalFunction(0.05, 0.15, 0.25, 0.40)), true),
                 new Quantifier("about half", new FuzzySet(relativeUniverse, new TrapezoidalFunction(0.35, 0.45, 0.55, 0.65)), true),
                 new Quantifier("many", new FuzzySet(relativeUniverse, new TrapezoidalFunction(0.55, 0.65, 0.8, 0.9)), true),
                 new Quantifier("almost all", new FuzzySet(relativeUniverse, new TrapezoidalFunction(0.8, 0.9, 1.0, 1.0)), true),
-
                 new Quantifier("less than 50K", new FuzzySet(absoluteUniverse, new TrapezoidalFunction(0, 0, 45000, 50000)), false),
                 new Quantifier("about 100K", new FuzzySet(absoluteUniverse, new TrapezoidalFunction(45000, 90000, 110000, 170000)), false),
                 new Quantifier("about 250K", new FuzzySet(absoluteUniverse, new TrapezoidalFunction(150000, 240000, 260000, 345000)), false),
@@ -348,55 +553,6 @@ public class MainApp extends Application {
                 new Quantifier("about 1M", new FuzzySet(absoluteUniverse, new TrapezoidalFunction(750000, 900000, 1100000, 1250000)), false),
                 new Quantifier("about 1.5M", new FuzzySet(absoluteUniverse, new TrapezoidalFunction(1200000, 1400000, 1600000, 2100000)), false),
                 new Quantifier("over 2M", new FuzzySet(absoluteUniverse, new TrapezoidalFunction(2000000, 2001000, 2335706, 2335706)), false)
-        );
-    }
-
-    private TreeView<String> createVariablesTree(String rootName) {
-        CheckBoxTreeItem<String> rootItem = new CheckBoxTreeItem<>(rootName);
-        rootItem.setExpanded(true);
-
-        for (LinguisticVariable var : allVariables) {
-            CheckBoxTreeItem<String> varItem = new CheckBoxTreeItem<>(var.getName());
-
-            for (String label : var.getLabels().keySet()) {
-                CheckBoxTreeItem<String> labelItem = new CheckBoxTreeItem<>(label);
-                varItem.getChildren().add(labelItem);
-            }
-            rootItem.getChildren().add(varItem);
-        }
-
-        TreeView<String> treeView = new TreeView<>(rootItem);
-        treeView.setCellFactory(CheckBoxTreeCell.forTreeView());
-        return treeView;
-    }
-
-    private void extractQualifiers(TreeItem<String> root, List<Qualifier> list, List<Function<Car, Double>> funcs) {
-        for (TreeItem<String> varNode : root.getChildren()) {
-            String varName = varNode.getValue();
-            LinguisticVariable variable = allVariables.stream().filter(v -> v.getName().equals(varName)).findFirst().orElse(null);
-            if (variable == null) continue;
-
-            for (TreeItem<String> labelNode : varNode.getChildren()) {
-                if (((CheckBoxTreeItem<String>) labelNode).isSelected()) {
-                    list.add(new Qualifier(variable, labelNode.getValue()));
-                    funcs.add(attributeExtractors.get(varName));
-                }
-            }
-        }
-    }
-
-    private void extractSummarizers(TreeItem<String> root, List<Summarizer> list, List<Function<Car, Double>> funcs) {
-        for (TreeItem<String> varNode : root.getChildren()) {
-            String varName = varNode.getValue();
-            LinguisticVariable variable = allVariables.stream().filter(v -> v.getName().equals(varName)).findFirst().orElse(null);
-            if (variable == null) continue;
-
-            for (TreeItem<String> labelNode : varNode.getChildren()) {
-                if (((CheckBoxTreeItem<String>) labelNode).isSelected()) {
-                    list.add(new Summarizer(variable, labelNode.getValue()));
-                    funcs.add(attributeExtractors.get(varName));
-                }
-            }
-        }
+        ));
     }
 }
