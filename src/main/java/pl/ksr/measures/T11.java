@@ -12,7 +12,7 @@ public class T11 implements QualityMeasure {
     @Override
     public double calculate(LinguisticSummary summary) {
         if (summary instanceof FirstFormSummary) {
-            return 0.0;
+            return 1.0;
         }
 
         SecondFormSummary s = (SecondFormSummary) summary;

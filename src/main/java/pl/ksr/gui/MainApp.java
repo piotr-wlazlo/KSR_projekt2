@@ -217,7 +217,6 @@ public class MainApp extends Application {
 
         HBox fParamsBox = new HBox(5, fP1, fP2, fP3, fP4);
 
-        // Logika przełączania interfejsu (Trapez/Gauss)
         fFuncTypeCombo.setOnAction(e -> {
             fParamsBox.getChildren().clear();
             fP1.clear(); fP2.clear(); fP3.clear(); fP4.clear();
@@ -275,13 +274,11 @@ public class MainApp extends Application {
             }
         });
 
-        // Wrzucamy ustawienia do HBoxa i pozwalamy im równo się rozciągnąć
         HBox.setHgrow(weightsPane, Priority.ALWAYS);
         HBox.setHgrow(newQuantifierPane, Priority.ALWAYS);
         HBox.setHgrow(newFeaturePane, Priority.ALWAYS);
         settingsRow.getChildren().addAll(weightsPane, newQuantifierPane, newFeaturePane);
 
-        // Złożenie zakładki Advanced
         VBox advancedGeneratorPanel = createGeneratorPanel(primaryStage, featureTreeRootAdvanced, settingsRow);
         advancedTab.setContent(advancedGeneratorPanel);
 
@@ -293,9 +290,6 @@ public class MainApp extends Application {
     }
 
 
-    // ==========================================
-    // UNIWERSALNY GENERATOR UI (Metoda Budująca)
-    // ==========================================
     private VBox createGeneratorPanel(Stage primaryStage, CheckBoxTreeItem<String> treeRoot, Node extraTopContent) {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(15));
@@ -387,22 +381,32 @@ public class MainApp extends Application {
                         List<Summarizer> summarizers = partition.summarizers.stream().map(f -> new Summarizer(f.variable, f.label)).toList();
                         List<Function<Car, Double>> sumExtractors = partition.summarizers.stream().map(f -> f.extractor).toList();
 
-                        pl.ksr.summary.LinguisticSummary summary;
-                        if (qualifiers.isEmpty()) {
-                            summary = new FirstFormSummary(q, summarizers, sumExtractors, LogicalOperator.AND, cars);
-                        } else {
-                            summary = new SecondFormSummary(q, qualifiers, qualExtractors, LogicalOperator.AND, summarizers, sumExtractors, LogicalOperator.AND, cars);
+                        LogicalOperator[] qualOps = qualifiers.size() > 1 ? LogicalOperator.values() : new LogicalOperator[]{LogicalOperator.AND};
+                        LogicalOperator[] sumOps = summarizers.size() > 1 ? LogicalOperator.values() : new LogicalOperator[]{LogicalOperator.AND};
+
+                        List<pl.ksr.summary.LinguisticSummary> generatedSummaries = new ArrayList<>();
+
+                        for (LogicalOperator sumOp : sumOps) {
+                            if (qualifiers.isEmpty()) {
+                                generatedSummaries.add(new FirstFormSummary(q, summarizers, sumExtractors, sumOp, cars));
+                            } else {
+                                for (LogicalOperator qualOp : qualOps) {
+                                    generatedSummaries.add(new SecondFormSummary(q, qualifiers, qualExtractors, qualOp, summarizers, sumExtractors, sumOp, cars));
+                                }
+                            }
                         }
 
-                        double optimal = toMeasure.calculate(summary);
-                        double t1 = new T1().calculate(summary); double t2 = new T2().calculate(summary);
-                        double t3 = new T3().calculate(summary); double t4 = new T4().calculate(summary);
-                        double t5 = new T5().calculate(summary); double t6 = new T6().calculate(summary);
-                        double t7 = new T7().calculate(summary); double t8 = new T8().calculate(summary);
-                        double t9 = new T9().calculate(summary); double t10 = new T10().calculate(summary);
-                        double t11 = new T11().calculate(summary);
+                        for (pl.ksr.summary.LinguisticSummary summary : generatedSummaries) {
+                            double optimal = toMeasure.calculate(summary);
+                            double t1 = new T1().calculate(summary); double t2 = new T2().calculate(summary);
+                            double t3 = new T3().calculate(summary); double t4 = new T4().calculate(summary);
+                            double t5 = new T5().calculate(summary); double t6 = new T6().calculate(summary);
+                            double t7 = new T7().calculate(summary); double t8 = new T8().calculate(summary);
+                            double t9 = new T9().calculate(summary); double t10 = new T10().calculate(summary);
+                            double t11 = new T11().calculate(summary);
 
-                        resultsList.add(new SummaryResult(summary.getSummary(), optimal, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11));
+                            resultsList.add(new SummaryResult(summary.getSummary(), optimal, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11));
+                        }
                     }
                 }
 
@@ -523,7 +527,10 @@ public class MainApp extends Application {
                 VariableInitializer.initializeFuelTankCapacity(),
                 VariableInitializer.initializeLength(),
                 VariableInitializer.initializeWheelbase(),
-                VariableInitializer.initializeDaysOnMarket()
+                VariableInitializer.initializeDaysOnMarket(),
+                VariableInitializer.initializeMakeName(),
+                VariableInitializer.initializeFuelType(),
+                VariableInitializer.initializeSegment()
         );
 
         attributeExtractors = new HashMap<>();
@@ -536,6 +543,9 @@ public class MainApp extends Application {
         attributeExtractors.put("Length", Car::length);
         attributeExtractors.put("Wheelbase", Car::wheelbase);
         attributeExtractors.put("Days On Market", car -> (double) car.daysOnMarket());
+        attributeExtractors.put("Make Name", car -> (double) VariableInitializer.MAKES.indexOf(car.makeName()));
+        attributeExtractors.put("Fuel Type", car -> (double) VariableInitializer.FUEL_TYPES.indexOf(car.fuelType()));
+        attributeExtractors.put("Segment", car -> car.segment() != null ? (double) car.segment().ordinal() : -1.0);
 
         DenseUniverse relativeUniverse = new DenseUniverse(0.0, 1.0);
         DenseUniverse absoluteUniverse = new DenseUniverse(0.0, 2335706.0);

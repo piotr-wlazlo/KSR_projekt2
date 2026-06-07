@@ -8,6 +8,7 @@ import pl.ksr.sets.FuzzySet;
 import pl.ksr.universe.DiscreteUniverse;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class VariableInitializer {
@@ -279,5 +280,70 @@ public class VariableInitializer {
                 daysOnMarket.addLabel("stale", stale);
 
                 return daysOnMarket;
+        }
+
+        public static final List<String> FUEL_TYPES = List.of(
+                "Biodiesel", "Compressed Natural Gas", "Diesel",
+                "Flex Fuel Vehicle", "Gasoline", "Hybrid", "Propane"
+        );
+
+        public static final List<String> MAKES = List.of(
+                "AM General", "Acura", "Alfa Romeo", "Aston Martin", "Audi",
+                "BMW", "Bentley", "Bugatti", "Buick", "Cadillac", "Chevrolet",
+                "Chrysler", "Daewoo", "Dodge", "Eagle", "FIAT", "Ferrari",
+                "Ford", "GMC", "Genesis", "Geo", "Honda", "Hummer",
+                "Hyundai", "INFINITI", "Isuzu", "Jaguar", "Jeep", "Kia",
+                "Lamborghini", "Land Rover", "Lexus", "Lincoln", "Lotus", "MINI",
+                "Maserati", "Maybach", "Mazda", "McLaren", "Mercedes-Benz",
+                "Mercury", "Mitsubishi", "Nissan", "Oldsmobile", "Pininfarina",
+                "Plymouth", "Pontiac", "Porsche", "RAM", "Rolls-Royce", "SRT",
+                "Saab", "Saturn", "Scion", "Subaru", "Suzuki", "Toyota",
+                "Volkswagen", "Volvo", "smart"
+        );
+
+        public static LinguisticVariable initializeMakeName() {
+                List<Double> makeList = new ArrayList<>();
+                for (int i = 0; i < MAKES.size(); i++) {
+                        makeList.add((double) i);
+                }
+                DiscreteUniverse universe = new DiscreteUniverse(makeList);
+                LinguisticVariable variable = new LinguisticVariable("Make Name", universe);
+
+                for (int i = 0; i < MAKES.size(); i++) {
+                        final double targetIndex = i;
+                        FuzzySet crispSet = new FuzzySet(universe, x -> x == targetIndex ? 1.0 : 0.0);
+                        variable.addLabel(MAKES.get(i), crispSet);
+                }
+                return variable;
+        }
+
+        public static LinguisticVariable initializeFuelType() {
+                List<Double> fuelList = new ArrayList<>();
+                for (int i = 0; i < FUEL_TYPES.size(); i++) {
+                        fuelList.add((double) i);
+                }
+                DiscreteUniverse universe = new DiscreteUniverse(fuelList);
+                LinguisticVariable variable = new LinguisticVariable("Fuel Type", universe);
+
+                for (int i = 0; i < FUEL_TYPES.size(); i++) {
+                        final double targetIndex = i;
+                        FuzzySet crispSet = new FuzzySet(universe, x -> x == targetIndex ? 1.0 : 0.0);
+                        variable.addLabel(FUEL_TYPES.get(i), crispSet);
+                }
+                return variable;
+        }
+
+        public static LinguisticVariable initializeSegment() {
+                List<Double> segmentList = List.of(0.0, 1.0, 2.0, 3.0, 4.0, 5.0);
+                DiscreteUniverse universe = new DiscreteUniverse(segmentList);
+                LinguisticVariable variable = new LinguisticVariable("Segment", universe);
+
+                String[] labels = {"A", "B", "C", "D", "E", "F"};
+                for (int i = 0; i < labels.length; i++) {
+                        final double targetIndex = i;
+                        FuzzySet crispSet = new FuzzySet(universe, x -> x == targetIndex ? 1.0 : 0.0);
+                        variable.addLabel(labels[i], crispSet);
+                }
+                return variable;
         }
 }

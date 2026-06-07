@@ -22,7 +22,11 @@ public class TrapezoidalFunction implements MembershipFunction {
         } else if (c < x && x < d) {
             return (d - x) / (d - c);
         }
-
         return 0.0;
     }
+
+    public double getA() { return a; }
+    public double getB() { return b; }
+    public double getC() { return c; }
+    public double getD() { return d; }
 }
