@@ -8,25 +8,25 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class MultiFourthForm implements LinguisticSummary {
-    private final List<Car> p1;
     private final String p1Name;
-    private final List<Car> p2;
+    private final List<Car> p1;
     private final String p2Name;
+    private final List<Car> p2;
     private final List<Summarizer> summarizers;
     private final List<Function<Car, Double>> attributes;
     private final LogicalOperator operator;
 
-    public MultiFourthForm(List<Car> p1,
-                           String p1Name,
-                           List<Car> p2,
+    public MultiFourthForm(String p1Name,
+                           List<Car> p1,
                            String p2Name,
+                           List<Car> p2,
                            List<Summarizer> summarizers,
                            List<Function<Car, Double>> attributes,
                            LogicalOperator operator) {
-        this.p1 = p1;
         this.p1Name = p1Name;
-        this.p2 = p2;
+        this.p1 = p1;
         this.p2Name = p2Name;
+        this.p2 = p2;
         this.summarizers = summarizers;
         this.attributes = attributes;
         this.operator = operator;

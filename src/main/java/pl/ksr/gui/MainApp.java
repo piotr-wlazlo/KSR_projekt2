@@ -50,17 +50,19 @@ public class MainApp extends Application {
     private CheckBoxTreeItem<String> featureTreeRootAdvanced;
     private CheckBoxTreeItem<String> featureTreeRootMulti;
 
-    private double[] activeWeights = {0.5, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05};
+    private final double[] activeWeights = {0.5, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05};
 
     static class SelectedFeature {
         LinguisticVariable variable;
         String label;
         Function<Car, Double> extractor;
+        boolean isNot;
 
-        SelectedFeature(LinguisticVariable v, String l, Function<Car, Double> e) {
-            variable = v;
-            label = l;
-            extractor = e;
+        SelectedFeature(LinguisticVariable v, String l, Function<Car, Double> e, boolean isNot) {
+            this.variable = v;
+            this.label = l;
+            this.extractor = e;
+            this.isNot = isNot;
         }
     }
 
@@ -232,13 +234,13 @@ public class MainApp extends Application {
                 List<Car> p2 = cars.stream().filter(sf2.filter).collect(Collectors.toList());
 
                 List<SummaryResult> resultsList = new ArrayList<>();
-                T1 t1Measure = new T1();
+                MultiSubjectT t1Measure = new MultiSubjectT();
 
                 for (Quantifier q : allQuantifiers) {
 
                     if (sel.size() == 1) {
                         SelectedFeature f1 = sel.get(0);
-                        List<Summarizer> sList = List.of(new Summarizer(f1.variable, f1.label));
+                        List<Summarizer> sList = List.of(new Summarizer(f1.variable, f1.label, f1.isNot));
                         List<Function<Car, Double>> sAttrs = List.of(f1.extractor);
 
                         if (q.isRelative()) {
@@ -257,10 +259,10 @@ public class MainApp extends Application {
                         SelectedFeature f1 = sel.get(0);
                         SelectedFeature f2 = sel.get(1);
 
-                        Summarizer s1 = new Summarizer(f1.variable, f1.label);
-                        Summarizer s2 = new Summarizer(f2.variable, f2.label);
-                        Qualifier w1 = new Qualifier(f1.variable, f1.label);
-                        Qualifier w2 = new Qualifier(f2.variable, f2.label);
+                        Summarizer s1 = new Summarizer(f1.variable, f1.label, f1.isNot);
+                        Summarizer s2 = new Summarizer(f2.variable, f2.label, f2.isNot);
+                        Qualifier w1 = new Qualifier(f1.variable, f1.label, f1.isNot);
+                        Qualifier w2 = new Qualifier(f2.variable, f2.label, f2.isNot);
 
                         if (q.isRelative()) {
 
@@ -283,9 +285,9 @@ public class MainApp extends Application {
                             resultsList.add(new SummaryResult(f2_b.getSummary(), t1Measure.calculate(f2_b), t1Measure.calculate(f2_b), 0,0,0,0,0,0,0,0,0,0));
 
 
-                            MultiThirdFormSummary f3_a = new MultiThirdFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(w1), List.of(f1.extractor), LogicalOperator.AND, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
+                            MultiThirdFormSummary f3_a = new MultiThirdFormSummary(q, sf1.name, p1, List.of(w1), List.of(f1.extractor), LogicalOperator.AND, sf2.name, p2, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
                             resultsList.add(new SummaryResult(f3_a.getSummary(), t1Measure.calculate(f3_a), t1Measure.calculate(f3_a), 0,0,0,0,0,0,0,0,0,0));
-                            MultiThirdFormSummary f3_b = new MultiThirdFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(w2), List.of(f2.extractor), LogicalOperator.AND, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
+                            MultiThirdFormSummary f3_b = new MultiThirdFormSummary(q, sf1.name, p1, List.of(w2), List.of(f2.extractor), LogicalOperator.AND, sf2.name, p2, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
                             resultsList.add(new SummaryResult(f3_b.getSummary(), t1Measure.calculate(f3_b), t1Measure.calculate(f3_b), 0,0,0,0,0,0,0,0,0,0));
                         }
 
@@ -546,9 +548,9 @@ public class MainApp extends Application {
 
                 for (Quantifier q : allQuantifiers) {
                     for (Partition partition : partitions) {
-                        List<Qualifier> qualifiers = partition.qualifiers.stream().map(f -> new Qualifier(f.variable, f.label)).toList();
+                        List<Qualifier> qualifiers = partition.qualifiers.stream().map(f -> new Qualifier(f.variable, f.label, f.isNot)).toList();
                         List<Function<Car, Double>> qualExtractors = partition.qualifiers.stream().map(f -> f.extractor).toList();
-                        List<Summarizer> summarizers = partition.summarizers.stream().map(f -> new Summarizer(f.variable, f.label)).toList();
+                        List<Summarizer> summarizers = partition.summarizers.stream().map(f -> new Summarizer(f.variable, f.label, f.isNot)).toList();
                         List<Function<Car, Double>> sumExtractors = partition.summarizers.stream().map(f -> f.extractor).toList();
 
                         LogicalOperator[] qualOps = qualifiers.size() > 1 ? LogicalOperator.values() : new LogicalOperator[]{LogicalOperator.AND};
@@ -628,7 +630,8 @@ public class MainApp extends Application {
             CheckBoxTreeItem<String> varItem = new CheckBoxTreeItem<>(var.getName());
             for (String label : var.getLabels().keySet()) {
                 CheckBoxTreeItem<String> labelItem = new CheckBoxTreeItem<>(label);
-                varItem.getChildren().add(labelItem);
+                CheckBoxTreeItem<String> notLabelItem = new CheckBoxTreeItem<>("not " + label);
+                varItem.getChildren().addAll(labelItem, notLabelItem);
             }
             root.getChildren().add(varItem);
         }
@@ -654,9 +657,14 @@ public class MainApp extends Application {
             String varName = varNode.getValue();
             LinguisticVariable variable = allVariables.stream().filter(v -> v.getName().equals(varName)).findFirst().orElse(null);
             if (variable == null) continue;
+
             for (TreeItem<String> labelNode : varNode.getChildren()) {
                 if (((CheckBoxTreeItem<String>) labelNode).isSelected()) {
-                    list.add(new SelectedFeature(variable, labelNode.getValue(), attributeExtractors.get(varName)));
+                    String nodeValue = labelNode.getValue();
+                    boolean isNot = nodeValue.startsWith("not ");
+                    String actualLabel = isNot ? nodeValue.substring(4) : nodeValue;
+
+                    list.add(new SelectedFeature(variable, actualLabel, attributeExtractors.get(varName), isNot));
                 }
             }
         }
@@ -677,6 +685,7 @@ public class MainApp extends Application {
         allVariables = List.of(
                 VariableInitializer.initializeMileage(),
                 VariableInitializer.initializePrice(),
+                VariableInitializer.initializeEngineDisplacement(),
                 VariableInitializer.initializeHorsepower(),
                 VariableInitializer.initializeYear(),
                 VariableInitializer.initializeTorque(),
@@ -702,6 +711,7 @@ public class MainApp extends Application {
         attributeExtractors.put("Make Name", car -> (double) VariableInitializer.MAKES.indexOf(car.makeName()));
         attributeExtractors.put("Fuel Type", car -> (double) VariableInitializer.FUEL_TYPES.indexOf(car.fuelType()));
         attributeExtractors.put("Segment", car -> car.segment() != null ? (double) car.segment().ordinal() : -1.0);
+        attributeExtractors.put("Engine Displacement", Car::engineDisplacement);
 
         DenseUniverse relativeUniverse = new DenseUniverse(0.0, 1.0);
         DenseUniverse absoluteUniverse = new DenseUniverse(0.0, 2335706.0);

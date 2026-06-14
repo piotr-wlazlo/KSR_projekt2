@@ -9,10 +9,10 @@ import java.util.stream.Stream;
 
 public class MultiSecondFormSummary implements LinguisticSummary {
     private final Quantifier quantifier;
-    private final List<Car> p1;
     private final String p1Name;
-    private final List<Car> p2;
+    private final List<Car> p1;
     private final String p2Name;
+    private final List<Car> p2;
     private final List<Qualifier> qualifiers;
     private final List<Function<Car, Double>> qualifierAttributes;
     private final LogicalOperator qualifierOperator;
@@ -21,10 +21,10 @@ public class MultiSecondFormSummary implements LinguisticSummary {
     private final LogicalOperator summarizerOperator;
 
     public MultiSecondFormSummary(Quantifier quantifier,
-                                  List<Car> p1,
                                   String p1Name,
-                                  List<Car> p2,
+                                  List<Car> p1,
                                   String p2Name,
+                                  List<Car> p2,
                                   List<Qualifier> qualifiers,
                                   List<Function<Car, Double>> qualifierAttributes,
                                   LogicalOperator qualifierOperator,
@@ -32,10 +32,10 @@ public class MultiSecondFormSummary implements LinguisticSummary {
                                   List<Function<Car, Double>> summarizerAttributes,
                                   LogicalOperator summarizerOperator) {
         this.quantifier = quantifier;
-        this.p1 = p1;
         this.p1Name = p1Name;
-        this.p2 = p2;
+        this.p1 = p1;
         this.p2Name = p2Name;
+        this.p2 = p2;
         this.qualifiers = qualifiers;
         this.qualifierAttributes = qualifierAttributes;
         this.qualifierOperator = qualifierOperator;

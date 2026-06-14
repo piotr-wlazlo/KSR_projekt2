@@ -8,7 +8,9 @@ import pl.ksr.summary.multi.MultiSecondFormSummary;
 import pl.ksr.summary.multi.MultiThirdFormSummary;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 public class MultiSubjectT implements QualityMeasure {
@@ -79,14 +81,17 @@ public class MultiSubjectT implements QualityMeasure {
             return 0.0;
         }
 
-        List<Car> universe = new ArrayList<>();
+        Set<Car> p1Set = new HashSet<>(p1);
+        Set<Car> p2Set = new HashSet<>(p2);
+
+        List<Car> universe = new ArrayList<>(p1.size() + p2.size());
         universe.addAll(p1);
         universe.addAll(p2);
 
         double sum = 0.0;
         for (Car car : universe) {
-            double a = p2.contains(car) ? calculateHelper(List.of(car), s.getSummarizers(), s.getAttributes(), s.getOperator(), null, null, null) : 0.0;
-            double b = p1.contains(car) ? calculateHelper(List.of(car), s.getSummarizers(), s.getAttributes(), s.getOperator(), null, null, null) : 0.0;
+            double a = p2Set.contains(car) ? calculateHelper(List.of(car), s.getSummarizers(), s.getAttributes(), s.getOperator(), null, null, null) : 0.0;
+            double b = p1Set.contains(car) ? calculateHelper(List.of(car), s.getSummarizers(), s.getAttributes(), s.getOperator(), null, null, null) : 0.0;
 
             sum += ReichenbachImplication.implication(a, b);
         }

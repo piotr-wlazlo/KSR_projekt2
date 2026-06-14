@@ -66,31 +66,31 @@ public class VariableInitializer {
                 return price;
         }
 
-        public static LinguisticVariable initializeEngineCapacity() {
-                List<Double> engineCapacityList = new ArrayList<>();
+        public static LinguisticVariable initializeEngineDisplacement() {
+                List<Double> engineDisplacementList = new ArrayList<>();
                 for (int i = 1000; i <= 84000; i++) {
-                        engineCapacityList.add((double) i);
+                        engineDisplacementList.add((double) i);
                 }
 
-                DiscreteUniverse engineCapacityUniverse = new DiscreteUniverse(engineCapacityList);
+                DiscreteUniverse engineDisplacementUniverse = new DiscreteUniverse(engineDisplacementList);
 
                 MembershipFunction funcAbout1500 = new TrapezoidalFunction(1000, 1000, 1800, 2200);
                 MembershipFunction funcAbout2500 = new TrapezoidalFunction(1800, 2200, 3200, 3800);
                 MembershipFunction funcAbout4500 = new TrapezoidalFunction(3200, 3800, 5200, 6000);
                 MembershipFunction funcMuchOver5200 = new TrapezoidalFunction(5200, 6000, 8400, 8400);
 
-                FuzzySet about1500 = new FuzzySet(engineCapacityUniverse, funcAbout1500);
-                FuzzySet about2500 = new FuzzySet(engineCapacityUniverse, funcAbout2500);
-                FuzzySet about4500 = new FuzzySet(engineCapacityUniverse, funcAbout4500);
-                FuzzySet muchOver5200 = new FuzzySet(engineCapacityUniverse, funcMuchOver5200);
+                FuzzySet about1500 = new FuzzySet(engineDisplacementUniverse, funcAbout1500);
+                FuzzySet about2500 = new FuzzySet(engineDisplacementUniverse, funcAbout2500);
+                FuzzySet about4500 = new FuzzySet(engineDisplacementUniverse, funcAbout4500);
+                FuzzySet muchOver5200 = new FuzzySet(engineDisplacementUniverse, funcMuchOver5200);
 
-                LinguisticVariable engineCapacity = new LinguisticVariable("Engine Capacity", engineCapacityUniverse);
-                engineCapacity.addLabel("about 1500", about1500);
-                engineCapacity.addLabel("about 2500", about2500);
-                engineCapacity.addLabel("about 4500", about4500);
-                engineCapacity.addLabel("much over 5200", muchOver5200);
+                LinguisticVariable engineDisplacement = new LinguisticVariable("Engine Displacement", engineDisplacementUniverse);
+                engineDisplacement.addLabel("about 1500", about1500);
+                engineDisplacement.addLabel("about 2500", about2500);
+                engineDisplacement.addLabel("about 4500", about4500);
+                engineDisplacement.addLabel("much over 5200", muchOver5200);
 
-                return engineCapacity;
+                return engineDisplacement;
         }
 
         public static LinguisticVariable initializeHorsepower() {
