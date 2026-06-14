@@ -1,9 +1,7 @@
 package pl.ksr.measures;
 
 import pl.ksr.Summarizer;
-import pl.ksr.summary.FirstFormSummary;
 import pl.ksr.summary.LinguisticSummary;
-import pl.ksr.summary.SecondFormSummary;
 
 import java.util.List;
 

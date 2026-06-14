@@ -5,7 +5,7 @@ import pl.ksr.membershipFunctions.TrapezoidalFunction;
 import pl.ksr.summary.LinguisticSummary;
 
 public class T6 implements QualityMeasure {
-    // Degree of quantifier imprecision
+    // degree of quantifier imprecision
     @Override
     public double calculate(LinguisticSummary summary) {
         Quantifier q = summary.getQuantifier();

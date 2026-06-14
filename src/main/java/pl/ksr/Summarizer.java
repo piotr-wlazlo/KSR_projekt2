@@ -5,10 +5,16 @@ import pl.ksr.sets.FuzzySet;
 public class Summarizer  {
     private final LinguisticVariable variable;
     private final String label;
+    private final boolean not;
 
     public Summarizer(LinguisticVariable variable, String label) {
+        this(variable, label, false);
+    }
+
+    public Summarizer(LinguisticVariable variable, String label, boolean not) {
         this.variable = variable;
         this.label = label;
+        this.not = not;
     }
 
     public String getVariableName() {
@@ -19,7 +25,12 @@ public class Summarizer  {
         return label;
     }
 
+    public boolean isNot() {
+        return not;
+    }
+
     public FuzzySet getFuzzySet() {
-        return variable.getFuzzySet(label);
+        FuzzySet fuzzySet = variable.getFuzzySet(label);
+        return not ? fuzzySet.complement() : fuzzySet;
     }
 }

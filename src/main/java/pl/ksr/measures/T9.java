@@ -1,9 +1,7 @@
 package pl.ksr.measures;
 
 import pl.ksr.Qualifier;
-import pl.ksr.summary.FirstFormSummary;
 import pl.ksr.summary.LinguisticSummary;
-import pl.ksr.summary.SecondFormSummary;
 
 import java.util.List;
 
@@ -11,12 +9,7 @@ public class T9 implements QualityMeasure {
     // degree od qualifier imprecision
     @Override
     public double calculate(LinguisticSummary summary) {
-        if (summary instanceof FirstFormSummary) {
-            return 0.0;
-        }
-
-        SecondFormSummary s = (SecondFormSummary) summary;
-        List<Qualifier> qualifiers = s.getQualifiers();
+        List<Qualifier> qualifiers = summary.getQualifiers();
         if (qualifiers.isEmpty()) {
             return 0.0;
         }

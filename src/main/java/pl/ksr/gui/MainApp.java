@@ -21,8 +21,8 @@ import pl.ksr.membershipFunctions.GaussianFunction;
 import pl.ksr.membershipFunctions.MembershipFunction;
 import pl.ksr.membershipFunctions.TrapezoidalFunction;
 import pl.ksr.sets.FuzzySet;
-import pl.ksr.summary.FirstFormSummary;
-import pl.ksr.summary.SecondFormSummary;
+import pl.ksr.summary.single.SingleFirstFormSummary;
+import pl.ksr.summary.single.SingleSecondFormSummary;
 import pl.ksr.universe.DenseUniverse;
 import pl.ksr.summary.multi.*;
 
@@ -242,12 +242,12 @@ public class MainApp extends Application {
                         List<Function<Car, Double>> sAttrs = List.of(f1.extractor);
 
                         if (q.isRelative()) {
-                            FirstForm FirstForm = new FirstForm(q, sf1.name, p1, sf2.name, p2, sList, sAttrs, LogicalOperator.AND);
+                            MultiFirstFormSummary FirstForm = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, sList, sAttrs, LogicalOperator.AND);
                             double t1 = t1Measure.calculate(FirstForm);
                             resultsList.add(new SummaryResult(FirstForm.getSummary(), t1, t1, 0,0,0,0,0,0,0,0,0,0));
                         }
                         if (q == allQuantifiers.get(0)) {
-                            FourthForm FourthForm = new FourthForm(sf1.name, p1, sf2.name, p2, sList, sAttrs, LogicalOperator.AND);
+                            MultiFourthForm FourthForm = new MultiFourthForm(sf1.name, p1, sf2.name, p2, sList, sAttrs, LogicalOperator.AND);
                             double t1 = t1Measure.calculate(FourthForm);
                             resultsList.add(new SummaryResult(FourthForm.getSummary(), t1, t1, 0,0,0,0,0,0,0,0,0,0));
                         }
@@ -264,41 +264,41 @@ public class MainApp extends Application {
 
                         if (q.isRelative()) {
 
-                            FirstForm f1_a = new FirstForm(q, sf1.name, p1, sf2.name, p2, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
+                            MultiFirstFormSummary f1_a = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
                             resultsList.add(new SummaryResult(f1_a.getSummary(), t1Measure.calculate(f1_a), t1Measure.calculate(f1_a), 0,0,0,0,0,0,0,0,0,0));
 
-                            FirstForm f1_b = new FirstForm(q, sf1.name, p1, sf2.name, p2, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
+                            MultiFirstFormSummary f1_b = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
                             resultsList.add(new SummaryResult(f1_b.getSummary(), t1Measure.calculate(f1_b), t1Measure.calculate(f1_b), 0,0,0,0,0,0,0,0,0,0));
 
-                            FirstForm f1_c = new FirstForm(q, sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.AND);
+                            MultiFirstFormSummary f1_c = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.AND);
                             resultsList.add(new SummaryResult(f1_c.getSummary(), t1Measure.calculate(f1_c), t1Measure.calculate(f1_c), 0,0,0,0,0,0,0,0,0,0));
 
-                            FirstForm f1_d = new FirstForm(q, sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.OR);
+                            MultiFirstFormSummary f1_d = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.OR);
                             resultsList.add(new SummaryResult(f1_d.getSummary(), t1Measure.calculate(f1_d), t1Measure.calculate(f1_d), 0,0,0,0,0,0,0,0,0,0));
 
 
-                            SecondForm f2_a = new SecondForm(q, sf1.name, p1, sf2.name, p2, List.of(w1), List.of(f1.extractor), LogicalOperator.AND, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
+                            MultiSecondFormSummary f2_a = new MultiSecondFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(w1), List.of(f1.extractor), LogicalOperator.AND, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
                             resultsList.add(new SummaryResult(f2_a.getSummary(), t1Measure.calculate(f2_a), t1Measure.calculate(f2_a), 0,0,0,0,0,0,0,0,0,0));
-                            SecondForm f2_b = new SecondForm(q, sf1.name, p1, sf2.name, p2, List.of(w2), List.of(f2.extractor), LogicalOperator.AND, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
+                            MultiSecondFormSummary f2_b = new MultiSecondFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(w2), List.of(f2.extractor), LogicalOperator.AND, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
                             resultsList.add(new SummaryResult(f2_b.getSummary(), t1Measure.calculate(f2_b), t1Measure.calculate(f2_b), 0,0,0,0,0,0,0,0,0,0));
 
 
-                            ThirdForm f3_a = new ThirdForm(q, sf1.name, p1, sf2.name, p2, List.of(w1), List.of(f1.extractor), LogicalOperator.AND, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
+                            MultiThirdFormSummary f3_a = new MultiThirdFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(w1), List.of(f1.extractor), LogicalOperator.AND, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
                             resultsList.add(new SummaryResult(f3_a.getSummary(), t1Measure.calculate(f3_a), t1Measure.calculate(f3_a), 0,0,0,0,0,0,0,0,0,0));
-                            ThirdForm f3_b = new ThirdForm(q, sf1.name, p1, sf2.name, p2, List.of(w2), List.of(f2.extractor), LogicalOperator.AND, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
+                            MultiThirdFormSummary f3_b = new MultiThirdFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(w2), List.of(f2.extractor), LogicalOperator.AND, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
                             resultsList.add(new SummaryResult(f3_b.getSummary(), t1Measure.calculate(f3_b), t1Measure.calculate(f3_b), 0,0,0,0,0,0,0,0,0,0));
                         }
 
                         if (q == allQuantifiers.get(0)) {
-                            FourthForm f4_a = new FourthForm(sf1.name, p1, sf2.name, p2, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
+                            MultiFourthForm f4_a = new MultiFourthForm(sf1.name, p1, sf2.name, p2, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
                             resultsList.add(new SummaryResult(f4_a.getSummary(), t1Measure.calculate(f4_a), t1Measure.calculate(f4_a), 0,0,0,0,0,0,0,0,0,0));
 
-                            FourthForm f4_b = new FourthForm(sf1.name, p1, sf2.name, p2, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
+                            MultiFourthForm f4_b = new MultiFourthForm(sf1.name, p1, sf2.name, p2, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
                             resultsList.add(new SummaryResult(f4_b.getSummary(), t1Measure.calculate(f4_b), t1Measure.calculate(f4_b), 0,0,0,0,0,0,0,0,0,0));
 
-                            FourthForm f4_c = new FourthForm(sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.AND);
+                            MultiFourthForm f4_c = new MultiFourthForm(sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.AND);
                             resultsList.add(new SummaryResult(f4_c.getSummary(), t1Measure.calculate(f4_c), t1Measure.calculate(f4_c), 0,0,0,0,0,0,0,0,0,0));
-                            FourthForm f4_d = new FourthForm(sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.OR);
+                            MultiFourthForm f4_d = new MultiFourthForm(sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.OR);
                             resultsList.add(new SummaryResult(f4_d.getSummary(), t1Measure.calculate(f4_d), t1Measure.calculate(f4_d), 0,0,0,0,0,0,0,0,0,0));
                         }
                     }
@@ -558,10 +558,10 @@ public class MainApp extends Application {
 
                         for (LogicalOperator sumOp : sumOps) {
                             if (qualifiers.isEmpty()) {
-                                generatedSummaries.add(new FirstFormSummary(q, summarizers, sumExtractors, sumOp, cars));
+                                generatedSummaries.add(new SingleFirstFormSummary(q, summarizers, sumExtractors, sumOp, cars));
                             } else {
                                 for (LogicalOperator qualOp : qualOps) {
-                                    generatedSummaries.add(new SecondFormSummary(q, qualifiers, qualExtractors, qualOp, summarizers, sumExtractors, sumOp, cars));
+                                    generatedSummaries.add(new SingleSecondFormSummary(q, qualifiers, qualExtractors, qualOp, summarizers, sumExtractors, sumOp, cars));
                                 }
                             }
                         }

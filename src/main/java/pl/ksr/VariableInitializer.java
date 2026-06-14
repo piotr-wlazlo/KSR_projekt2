@@ -149,7 +149,7 @@ public class VariableInitializer {
 
         public static LinguisticVariable initializeMileage() {
                 List<Double> mileageList = new ArrayList<>();
-                for (int i = 0; i <= 6904811; i += 1000) { // Zoptymalizowano dla wydajności przy tak wielkiej liście
+                for (int i = 0; i <= 6904811; i++) {
                         mileageList.add((double) i);
                 }
 

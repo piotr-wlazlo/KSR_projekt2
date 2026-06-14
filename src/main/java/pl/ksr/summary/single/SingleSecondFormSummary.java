@@ -1,12 +1,13 @@
-package pl.ksr.summary;
+package pl.ksr.summary.single;
 
 import pl.ksr.*;
+import pl.ksr.summary.LinguisticSummary;
 
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class SecondFormSummary implements LinguisticSummary {
+public class SingleSecondFormSummary implements LinguisticSummary {
     private final Quantifier quantifier;
     private final List<Qualifier> qualifiers;
     private final List<Function<Car, Double>> qualifierAttributes;
@@ -16,23 +17,23 @@ public class SecondFormSummary implements LinguisticSummary {
     private final LogicalOperator summarizerOperator;
     private final List<Car> cars;
 
-    public SecondFormSummary(Quantifier quantifier,
-                             List<Qualifier> qualifiers,
-                             List<Function<Car, Double>> qualifierAttributes,
-                             List<Summarizer> summarizers,
-                             List<Function<Car, Double>> summarizerAttributes,
-                             List<Car> cars) {
+    public SingleSecondFormSummary(Quantifier quantifier,
+                                   List<Qualifier> qualifiers,
+                                   List<Function<Car, Double>> qualifierAttributes,
+                                   List<Summarizer> summarizers,
+                                   List<Function<Car, Double>> summarizerAttributes,
+                                   List<Car> cars) {
         this(quantifier, qualifiers, summarizerAttributes, LogicalOperator.AND, summarizers, qualifierAttributes, LogicalOperator.AND, cars);
     }
 
-    public SecondFormSummary(Quantifier quantifier,
-                             List<Qualifier> qualifiers,
-                             List<Function<Car, Double>> qualifierAttributes,
-                             LogicalOperator qualifierOperator,
-                             List<Summarizer> summarizers,
-                             List<Function<Car, Double>> summarizerAttributes,
-                             LogicalOperator summarizerOperator,
-                             List<Car> cars) {
+    public SingleSecondFormSummary(Quantifier quantifier,
+                                   List<Qualifier> qualifiers,
+                                   List<Function<Car, Double>> qualifierAttributes,
+                                   LogicalOperator qualifierOperator,
+                                   List<Summarizer> summarizers,
+                                   List<Function<Car, Double>> summarizerAttributes,
+                                   LogicalOperator summarizerOperator,
+                                   List<Car> cars) {
         this.quantifier = quantifier;
         this.qualifiers = qualifiers;
         this.qualifierAttributes = qualifierAttributes;
@@ -49,11 +50,11 @@ public class SecondFormSummary implements LinguisticSummary {
         String summarizerOp = summarizerOperator == LogicalOperator.AND ? " and " : " or ";
 
         String qualifiersLabel = qualifiers.stream()
-                .map(q -> q.getVariableName() + " " + q.getLabel())
+                .map(q -> q.getVariableName() + " " + (q.isNot() ? "not " : "") + q.getLabel())
                 .collect(Collectors.joining(qualifierOp));
 
         String summarizersLabel = summarizers.stream()
-                .map(s -> s.getVariableName() + " " + s.getLabel())
+                .map(s -> s.getVariableName() + " " + (s.isNot() ? "not " : "") + s.getLabel())
                 .collect(Collectors.joining(summarizerOp));
 
 
@@ -64,14 +65,17 @@ public class SecondFormSummary implements LinguisticSummary {
         return quantifier;
     }
 
+    @Override
     public List<Qualifier> getQualifiers() {
         return qualifiers;
     }
 
+    @Override
     public List<Function<Car, Double>> getQualifierAttributes() {
         return qualifierAttributes;
     }
 
+    @Override
     public LogicalOperator getQualifierOperator() {
         return qualifierOperator;
     }

@@ -2,9 +2,9 @@ package pl.ksr.measures;
 
 import pl.ksr.Car;
 import pl.ksr.LogicalOperator;
-import pl.ksr.summary.FirstFormSummary;
+import pl.ksr.summary.single.SingleFirstFormSummary;
 import pl.ksr.summary.LinguisticSummary;
-import pl.ksr.summary.SecondFormSummary;
+import pl.ksr.summary.single.SingleSecondFormSummary;
 
 import java.util.List;
 
@@ -12,15 +12,15 @@ public class T3 implements QualityMeasure {
     // degree of covering
     @Override
     public double calculate(LinguisticSummary summary) {
-        if (summary instanceof FirstFormSummary) {
-            return calculateFirstForm((FirstFormSummary) summary);
-        } else if (summary instanceof SecondFormSummary) {
-            return calculateSecondForm((SecondFormSummary) summary);
+        if (summary instanceof SingleFirstFormSummary) {
+            return calculateFirstForm((SingleFirstFormSummary) summary);
+        } else if (summary instanceof SingleSecondFormSummary) {
+            return calculateSecondForm((SingleSecondFormSummary) summary);
         }
         return 0.0;
     }
 
-    private double calculateFirstForm(FirstFormSummary s) {
+    private double calculateFirstForm(SingleFirstFormSummary s) {
         List<Car> cars = s.getCars();
 
         if (cars.isEmpty()) {
@@ -47,7 +47,7 @@ public class T3 implements QualityMeasure {
         return (double) numerator / denominator;
     }
 
-    private double calculateSecondForm(SecondFormSummary s) {
+    private double calculateSecondForm(SingleSecondFormSummary s) {
         List<Car> cars = s.getCars();
 
         if (cars.isEmpty()) {

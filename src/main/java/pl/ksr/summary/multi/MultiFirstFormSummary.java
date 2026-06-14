@@ -1,0 +1,91 @@
+package pl.ksr.summary.multi;
+
+import pl.ksr.Car;
+import pl.ksr.LogicalOperator;
+import pl.ksr.Quantifier;
+import pl.ksr.Summarizer;
+import pl.ksr.summary.LinguisticSummary;
+
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class MultiFirstFormSummary implements LinguisticSummary {
+    private final Quantifier quantifier;
+    private final List<Car> p1;
+    private final String p1Name;
+    private final List<Car> p2;
+    private final String p2Name;
+    private final List<Summarizer> summarizers;
+    private final List<Function<Car, Double>> attributes;
+    private final LogicalOperator operator;
+
+    public MultiFirstFormSummary(Quantifier quantifier,
+                                 String p1Name,
+                                 List<Car> p1,
+                                 String p2Name,
+                                 List<Car> p2,
+                                 List<Summarizer> summarizers,
+                                 List<Function<Car, Double>> attributes,
+                                 LogicalOperator operator) {
+        this.quantifier = quantifier;
+        this.p1Name = p1Name;
+        this.p1 = p1;
+        this.p2Name = p2Name;
+        this.p2 = p2;
+        this.summarizers = summarizers;
+        this.attributes = attributes;
+        this.operator = operator;
+    }
+
+    @Override
+    public String getSummary() {
+        String op = operator == LogicalOperator.AND ? " and " : " or ";
+
+        String summarizersLabel = summarizers.stream()
+                .map(s -> s.getVariableName() + " " + (s.isNot() ? "not " : "") + s.getLabel())
+                .collect(Collectors.joining(op));
+
+        return quantifier.getLabel() + " " + p1Name + " compared to " + p2Name + " are/have " + summarizersLabel;
+    }
+
+    @Override
+    public Quantifier getQuantifier() {
+        return quantifier;
+    }
+
+    @Override
+    public List<Car> getCars() {
+        return Stream.concat(p1.stream(), p2.stream()).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Summarizer> getSummarizers() {
+        return summarizers;
+    }
+
+    public List<Car> getP1() {
+        return p1;
+    }
+
+    public String getP1Name() {
+        return p1Name;
+    }
+
+    public List<Car> getP2() {
+        return p2;
+    }
+
+    public String getP2Name() {
+        return p2Name;
+    }
+
+    public List<Function<Car, Double>> getAttributes() {
+        return attributes;
+    }
+
+    public LogicalOperator getOperator() {
+        return operator;
+    }
+}
