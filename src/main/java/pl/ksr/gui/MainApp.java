@@ -184,8 +184,6 @@ public class MainApp extends Application {
         subGrid.addRow(0, new Label("Subject 1:"), sub1Combo);
         subGrid.addRow(1, new Label("Subject 2:"), sub2Combo);
 
-
-
         subjectConfigBox.getChildren().addAll(radioLabel, radioBox, subLabel, subGrid);
         HBox.setHgrow(subjectConfigBox, Priority.ALWAYS);
         topSection.getChildren().addAll(featuresBox, subjectConfigBox);
@@ -197,7 +195,14 @@ public class MainApp extends Application {
         generateBtn.setStyle("-fx-font-weight: bold; -fx-base: #DE68A5;");
         Button saveBtn = new Button("Save selected to file");
         saveBtn.setStyle("-fx-font-weight: bold; -fx-base: #7B448C;");
-        actionButtonsBox.getChildren().addAll(generateBtn, saveBtn);
+
+        Label limitLabel = new Label("Show top N:");
+        limitLabel.setStyle("-fx-font-weight: bold;");
+        TextField limitField = new TextField();
+        limitField.setPromptText("All");
+        limitField.setPrefWidth(80);
+
+        actionButtonsBox.getChildren().addAll(generateBtn, saveBtn, limitLabel, limitField);
 
         TableView<SummaryResult> table = new TableView<>();
         table.setPrefHeight(350); VBox.setVgrow(table, Priority.ALWAYS);
@@ -214,10 +219,10 @@ public class MainApp extends Application {
 
         generateBtn.setOnAction(e -> {
             try {
-                List<SelectedFeature> sel = new ArrayList<>();
-                extractFeatures(featureTreeRootMulti, sel);
+                List<SelectedFeature> baseSel = new ArrayList<>();
+                extractFeatures(featureTreeRootMulti, baseSel);
 
-                if (sel.isEmpty() || sel.size() > 2) {
+                if (baseSel.isEmpty() || baseSel.size() > 2) {
                     new Alert(Alert.AlertType.WARNING, "For Multi-Subject summaries, please select exactly 1 or 2 features!").show();
                     return;
                 }
@@ -236,77 +241,89 @@ public class MainApp extends Application {
                 List<SummaryResult> resultsList = new ArrayList<>();
                 MultiSubjectT t1Measure = new MultiSubjectT();
 
+                List<List<SelectedFeature>> combos = generateAllFeatureVariations(baseSel);
+
                 for (Quantifier q : allQuantifiers) {
+                    for (List<SelectedFeature> sel : combos) {
+                        if (sel.size() == 1) {
+                            SelectedFeature f1 = sel.get(0);
+                            List<Summarizer> sList = List.of(new Summarizer(f1.variable, f1.label, f1.isNot));
+                            List<Function<Car, Double>> sAttrs = List.of(f1.extractor);
 
-                    if (sel.size() == 1) {
-                        SelectedFeature f1 = sel.get(0);
-                        List<Summarizer> sList = List.of(new Summarizer(f1.variable, f1.label, f1.isNot));
-                        List<Function<Car, Double>> sAttrs = List.of(f1.extractor);
-
-                        if (q.isRelative()) {
-                            MultiFirstFormSummary FirstForm = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, sList, sAttrs, LogicalOperator.AND);
-                            double t1 = t1Measure.calculate(FirstForm);
-                            resultsList.add(new SummaryResult(FirstForm.getSummary(), t1, t1, 0,0,0,0,0,0,0,0,0,0));
+                            if (q.isRelative()) {
+                                MultiFirstFormSummary FirstForm = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, sList, sAttrs, LogicalOperator.AND);
+                                double t1 = t1Measure.calculate(FirstForm);
+                                resultsList.add(new SummaryResult(FirstForm.getSummary(), t1, t1, 0,0,0,0,0,0,0,0,0,0));
+                            }
+                            if (q == allQuantifiers.get(0)) {
+                                MultiFourthForm FourthForm = new MultiFourthForm(sf1.name, p1, sf2.name, p2, sList, sAttrs, LogicalOperator.AND);
+                                double t1 = t1Measure.calculate(FourthForm);
+                                resultsList.add(new SummaryResult(FourthForm.getSummary(), t1, t1, 0,0,0,0,0,0,0,0,0,0));
+                            }
                         }
-                        if (q == allQuantifiers.get(0)) {
-                            MultiFourthForm FourthForm = new MultiFourthForm(sf1.name, p1, sf2.name, p2, sList, sAttrs, LogicalOperator.AND);
-                            double t1 = t1Measure.calculate(FourthForm);
-                            resultsList.add(new SummaryResult(FourthForm.getSummary(), t1, t1, 0,0,0,0,0,0,0,0,0,0));
-                        }
-                    }
+                        else if (sel.size() == 2) {
+                            SelectedFeature f1 = sel.get(0);
+                            SelectedFeature f2 = sel.get(1);
 
-                    else if (sel.size() == 2) {
-                        SelectedFeature f1 = sel.get(0);
-                        SelectedFeature f2 = sel.get(1);
+                            Summarizer s1 = new Summarizer(f1.variable, f1.label, f1.isNot);
+                            Summarizer s2 = new Summarizer(f2.variable, f2.label, f2.isNot);
+                            Qualifier w1 = new Qualifier(f1.variable, f1.label, f1.isNot);
+                            Qualifier w2 = new Qualifier(f2.variable, f2.label, f2.isNot);
 
-                        Summarizer s1 = new Summarizer(f1.variable, f1.label, f1.isNot);
-                        Summarizer s2 = new Summarizer(f2.variable, f2.label, f2.isNot);
-                        Qualifier w1 = new Qualifier(f1.variable, f1.label, f1.isNot);
-                        Qualifier w2 = new Qualifier(f2.variable, f2.label, f2.isNot);
+                            if (q.isRelative()) {
 
-                        if (q.isRelative()) {
+                                MultiFirstFormSummary f1_a = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
+                                resultsList.add(new SummaryResult(f1_a.getSummary(), t1Measure.calculate(f1_a), t1Measure.calculate(f1_a), 0,0,0,0,0,0,0,0,0,0));
 
-                            MultiFirstFormSummary f1_a = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
-                            resultsList.add(new SummaryResult(f1_a.getSummary(), t1Measure.calculate(f1_a), t1Measure.calculate(f1_a), 0,0,0,0,0,0,0,0,0,0));
+                                MultiFirstFormSummary f1_b = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
+                                resultsList.add(new SummaryResult(f1_b.getSummary(), t1Measure.calculate(f1_b), t1Measure.calculate(f1_b), 0,0,0,0,0,0,0,0,0,0));
 
-                            MultiFirstFormSummary f1_b = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
-                            resultsList.add(new SummaryResult(f1_b.getSummary(), t1Measure.calculate(f1_b), t1Measure.calculate(f1_b), 0,0,0,0,0,0,0,0,0,0));
+                                MultiFirstFormSummary f1_c = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.AND);
+                                resultsList.add(new SummaryResult(f1_c.getSummary(), t1Measure.calculate(f1_c), t1Measure.calculate(f1_c), 0,0,0,0,0,0,0,0,0,0));
 
-                            MultiFirstFormSummary f1_c = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.AND);
-                            resultsList.add(new SummaryResult(f1_c.getSummary(), t1Measure.calculate(f1_c), t1Measure.calculate(f1_c), 0,0,0,0,0,0,0,0,0,0));
+                                MultiFirstFormSummary f1_d = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.OR);
+                                resultsList.add(new SummaryResult(f1_d.getSummary(), t1Measure.calculate(f1_d), t1Measure.calculate(f1_d), 0,0,0,0,0,0,0,0,0,0));
 
-                            MultiFirstFormSummary f1_d = new MultiFirstFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.OR);
-                            resultsList.add(new SummaryResult(f1_d.getSummary(), t1Measure.calculate(f1_d), t1Measure.calculate(f1_d), 0,0,0,0,0,0,0,0,0,0));
+                                MultiSecondFormSummary f2_a = new MultiSecondFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(w1), List.of(f1.extractor), LogicalOperator.AND, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
+                                resultsList.add(new SummaryResult(f2_a.getSummary(), t1Measure.calculate(f2_a), t1Measure.calculate(f2_a), 0,0,0,0,0,0,0,0,0,0));
+                                MultiSecondFormSummary f2_b = new MultiSecondFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(w2), List.of(f2.extractor), LogicalOperator.AND, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
+                                resultsList.add(new SummaryResult(f2_b.getSummary(), t1Measure.calculate(f2_b), t1Measure.calculate(f2_b), 0,0,0,0,0,0,0,0,0,0));
 
+                                MultiThirdFormSummary f3_a = new MultiThirdFormSummary(q, sf1.name, p1, List.of(w1), List.of(f1.extractor), LogicalOperator.AND, sf2.name, p2, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
+                                resultsList.add(new SummaryResult(f3_a.getSummary(), t1Measure.calculate(f3_a), t1Measure.calculate(f3_a), 0,0,0,0,0,0,0,0,0,0));
+                                MultiThirdFormSummary f3_b = new MultiThirdFormSummary(q, sf1.name, p1, List.of(w2), List.of(f2.extractor), LogicalOperator.AND, sf2.name, p2, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
+                                resultsList.add(new SummaryResult(f3_b.getSummary(), t1Measure.calculate(f3_b), t1Measure.calculate(f3_b), 0,0,0,0,0,0,0,0,0,0));
+                            }
 
-                            MultiSecondFormSummary f2_a = new MultiSecondFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(w1), List.of(f1.extractor), LogicalOperator.AND, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
-                            resultsList.add(new SummaryResult(f2_a.getSummary(), t1Measure.calculate(f2_a), t1Measure.calculate(f2_a), 0,0,0,0,0,0,0,0,0,0));
-                            MultiSecondFormSummary f2_b = new MultiSecondFormSummary(q, sf1.name, p1, sf2.name, p2, List.of(w2), List.of(f2.extractor), LogicalOperator.AND, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
-                            resultsList.add(new SummaryResult(f2_b.getSummary(), t1Measure.calculate(f2_b), t1Measure.calculate(f2_b), 0,0,0,0,0,0,0,0,0,0));
+                            if (q == allQuantifiers.get(0)) {
+                                MultiFourthForm f4_a = new MultiFourthForm(sf1.name, p1, sf2.name, p2, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
+                                resultsList.add(new SummaryResult(f4_a.getSummary(), t1Measure.calculate(f4_a), t1Measure.calculate(f4_a), 0,0,0,0,0,0,0,0,0,0));
 
+                                MultiFourthForm f4_b = new MultiFourthForm(sf1.name, p1, sf2.name, p2, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
+                                resultsList.add(new SummaryResult(f4_b.getSummary(), t1Measure.calculate(f4_b), t1Measure.calculate(f4_b), 0,0,0,0,0,0,0,0,0,0));
 
-                            MultiThirdFormSummary f3_a = new MultiThirdFormSummary(q, sf1.name, p1, List.of(w1), List.of(f1.extractor), LogicalOperator.AND, sf2.name, p2, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
-                            resultsList.add(new SummaryResult(f3_a.getSummary(), t1Measure.calculate(f3_a), t1Measure.calculate(f3_a), 0,0,0,0,0,0,0,0,0,0));
-                            MultiThirdFormSummary f3_b = new MultiThirdFormSummary(q, sf1.name, p1, List.of(w2), List.of(f2.extractor), LogicalOperator.AND, sf2.name, p2, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
-                            resultsList.add(new SummaryResult(f3_b.getSummary(), t1Measure.calculate(f3_b), t1Measure.calculate(f3_b), 0,0,0,0,0,0,0,0,0,0));
-                        }
-
-                        if (q == allQuantifiers.get(0)) {
-                            MultiFourthForm f4_a = new MultiFourthForm(sf1.name, p1, sf2.name, p2, List.of(s1), List.of(f1.extractor), LogicalOperator.AND);
-                            resultsList.add(new SummaryResult(f4_a.getSummary(), t1Measure.calculate(f4_a), t1Measure.calculate(f4_a), 0,0,0,0,0,0,0,0,0,0));
-
-                            MultiFourthForm f4_b = new MultiFourthForm(sf1.name, p1, sf2.name, p2, List.of(s2), List.of(f2.extractor), LogicalOperator.AND);
-                            resultsList.add(new SummaryResult(f4_b.getSummary(), t1Measure.calculate(f4_b), t1Measure.calculate(f4_b), 0,0,0,0,0,0,0,0,0,0));
-
-                            MultiFourthForm f4_c = new MultiFourthForm(sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.AND);
-                            resultsList.add(new SummaryResult(f4_c.getSummary(), t1Measure.calculate(f4_c), t1Measure.calculate(f4_c), 0,0,0,0,0,0,0,0,0,0));
-                            MultiFourthForm f4_d = new MultiFourthForm(sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.OR);
-                            resultsList.add(new SummaryResult(f4_d.getSummary(), t1Measure.calculate(f4_d), t1Measure.calculate(f4_d), 0,0,0,0,0,0,0,0,0,0));
+                                MultiFourthForm f4_c = new MultiFourthForm(sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.AND);
+                                resultsList.add(new SummaryResult(f4_c.getSummary(), t1Measure.calculate(f4_c), t1Measure.calculate(f4_c), 0,0,0,0,0,0,0,0,0,0));
+                                MultiFourthForm f4_d = new MultiFourthForm(sf1.name, p1, sf2.name, p2, List.of(s1, s2), List.of(f1.extractor, f2.extractor), LogicalOperator.OR);
+                                resultsList.add(new SummaryResult(f4_d.getSummary(), t1Measure.calculate(f4_d), t1Measure.calculate(f4_d), 0,0,0,0,0,0,0,0,0,0));
+                            }
                         }
                     }
                 }
 
                 resultsList.sort((r1, r2) -> Double.compare(r2.getT1(), r1.getT1()));
+
+                String limitText = limitField.getText().trim();
+                if (!limitText.isEmpty()) {
+                    try {
+                        int limit = Integer.parseInt(limitText);
+                        if (limit > 0 && limit < resultsList.size()) {
+                            resultsList = resultsList.subList(0, limit);
+                        }
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+
                 table.getItems().clear();
                 table.getItems().addAll(resultsList);
 
@@ -509,7 +526,14 @@ public class MainApp extends Application {
         generateBtn.setStyle("-fx-font-weight: bold; -fx-base: #DE68A5;");
         Button saveBtn = new Button("Save selected to file");
         saveBtn.setStyle("-fx-font-weight: bold; -fx-base: #7B448C;");
-        actionButtonsBox.getChildren().addAll(generateBtn, saveBtn);
+
+        Label limitLabel = new Label("Show top N:");
+        limitLabel.setStyle("-fx-font-weight: bold;");
+        TextField limitField = new TextField();
+        limitField.setPromptText("All");
+        limitField.setPrefWidth(80);
+
+        actionButtonsBox.getChildren().addAll(generateBtn, saveBtn, limitLabel, limitField);
 
         TableView<SummaryResult> table = new TableView<>();
         table.setPrefHeight(350); VBox.setVgrow(table, Priority.ALWAYS);
@@ -527,10 +551,10 @@ public class MainApp extends Application {
 
         generateBtn.setOnAction(e -> {
             try {
-                List<SelectedFeature> selectedFeatures = new ArrayList<>();
-                extractFeatures(treeRoot, selectedFeatures);
+                List<SelectedFeature> baseFeatures = new ArrayList<>();
+                extractFeatures(treeRoot, baseFeatures);
 
-                if (selectedFeatures.isEmpty() || selectedFeatures.size() > 3) {
+                if (baseFeatures.isEmpty() || baseFeatures.size() > 3) {
                     new Alert(Alert.AlertType.WARNING, "Please select between 1 and 3 features!").show();
                     return;
                 }
@@ -544,37 +568,54 @@ public class MainApp extends Application {
                 toMeasure.addMeasure(new T11(), activeWeights[10]);
 
                 List<SummaryResult> resultsList = new ArrayList<>();
-                List<Partition> partitions = generatePartitions(selectedFeatures);
+
+                List<List<SelectedFeature>> allFeatureCombos = generateAllFeatureVariations(baseFeatures);
 
                 for (Quantifier q : allQuantifiers) {
-                    for (Partition partition : partitions) {
-                        List<Qualifier> qualifiers = partition.qualifiers.stream().map(f -> new Qualifier(f.variable, f.label, f.isNot)).toList();
-                        List<Function<Car, Double>> qualExtractors = partition.qualifiers.stream().map(f -> f.extractor).toList();
-                        List<Summarizer> summarizers = partition.summarizers.stream().map(f -> new Summarizer(f.variable, f.label, f.isNot)).toList();
-                        List<Function<Car, Double>> sumExtractors = partition.summarizers.stream().map(f -> f.extractor).toList();
+                    for (List<SelectedFeature> combo : allFeatureCombos) {
+                        List<Partition> partitions = generatePartitions(combo);
 
-                        LogicalOperator[] qualOps = qualifiers.size() > 1 ? LogicalOperator.values() : new LogicalOperator[]{LogicalOperator.AND};
-                        LogicalOperator[] sumOps = summarizers.size() > 1 ? LogicalOperator.values() : new LogicalOperator[]{LogicalOperator.AND};
+                        for (Partition partition : partitions) {
+                            List<Qualifier> qualifiers = partition.qualifiers.stream().map(f -> new Qualifier(f.variable, f.label, f.isNot)).toList();
+                            List<Function<Car, Double>> qualExtractors = partition.qualifiers.stream().map(f -> f.extractor).toList();
+                            List<Summarizer> summarizers = partition.summarizers.stream().map(f -> new Summarizer(f.variable, f.label, f.isNot)).toList();
+                            List<Function<Car, Double>> sumExtractors = partition.summarizers.stream().map(f -> f.extractor).toList();
 
-                        List<pl.ksr.summary.LinguisticSummary> generatedSummaries = new ArrayList<>();
+                            LogicalOperator[] qualOps = qualifiers.size() > 1 ? LogicalOperator.values() : new LogicalOperator[]{LogicalOperator.AND};
+                            LogicalOperator[] sumOps = summarizers.size() > 1 ? LogicalOperator.values() : new LogicalOperator[]{LogicalOperator.AND};
 
-                        for (LogicalOperator sumOp : sumOps) {
-                            if (qualifiers.isEmpty()) {
-                                generatedSummaries.add(new SingleFirstFormSummary(q, summarizers, sumExtractors, sumOp, cars));
-                            } else {
-                                for (LogicalOperator qualOp : qualOps) {
-                                    generatedSummaries.add(new SingleSecondFormSummary(q, qualifiers, qualExtractors, qualOp, summarizers, sumExtractors, sumOp, cars));
+                            List<pl.ksr.summary.LinguisticSummary> generatedSummaries = new ArrayList<>();
+
+                            for (LogicalOperator sumOp : sumOps) {
+                                if (qualifiers.isEmpty()) {
+                                    generatedSummaries.add(new SingleFirstFormSummary(q, summarizers, sumExtractors, sumOp, cars));
+                                } else {
+                                    for (LogicalOperator qualOp : qualOps) {
+                                        generatedSummaries.add(new SingleSecondFormSummary(q, qualifiers, qualExtractors, qualOp, summarizers, sumExtractors, sumOp, cars));
+                                    }
                                 }
                             }
-                        }
 
-                        for (pl.ksr.summary.LinguisticSummary summary : generatedSummaries) {
-                            resultsList.add(evaluateSummary(summary, toMeasure));
+                            for (pl.ksr.summary.LinguisticSummary summary : generatedSummaries) {
+                                resultsList.add(evaluateSummary(summary, toMeasure));
+                            }
                         }
                     }
                 }
 
                 resultsList.sort((r1, r2) -> Double.compare(r2.getOptimalMeasure(), r1.getOptimalMeasure()));
+
+                String limitText = limitField.getText().trim();
+                if (!limitText.isEmpty()) {
+                    try {
+                        int limit = Integer.parseInt(limitText);
+                        if (limit > 0 && limit < resultsList.size()) {
+                            resultsList = resultsList.subList(0, limit);
+                        }
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+
                 table.getItems().clear();
                 table.getItems().addAll(resultsList);
 
@@ -630,11 +671,37 @@ public class MainApp extends Application {
             CheckBoxTreeItem<String> varItem = new CheckBoxTreeItem<>(var.getName());
             for (String label : var.getLabels().keySet()) {
                 CheckBoxTreeItem<String> labelItem = new CheckBoxTreeItem<>(label);
-                CheckBoxTreeItem<String> notLabelItem = new CheckBoxTreeItem<>("not " + label);
-                varItem.getChildren().addAll(labelItem, notLabelItem);
+                varItem.getChildren().add(labelItem);
             }
             root.getChildren().add(varItem);
         }
+    }
+
+
+    private List<List<SelectedFeature>> generateAllFeatureVariations(List<SelectedFeature> baseFeatures) {
+        List<List<SelectedFeature>> allVariations = new ArrayList<>();
+        int n = baseFeatures.size();
+
+        for (int i = 1; i < (1 << n); i++) {
+            List<SelectedFeature> subset = new ArrayList<>();
+            for (int j = 0; j < n; j++) {
+                if ((i & (1 << j)) != 0) {
+                    subset.add(baseFeatures.get(j));
+                }
+            }
+
+            int k = subset.size();
+            for (int mask = 0; mask < (1 << k); mask++) {
+                List<SelectedFeature> variation = new ArrayList<>();
+                for (int j = 0; j < k; j++) {
+                    SelectedFeature base = subset.get(j);
+                    boolean isNot = (mask & (1 << j)) != 0;
+                    variation.add(new SelectedFeature(base.variable, base.label, base.extractor, isNot));
+                }
+                allVariations.add(variation);
+            }
+        }
+        return allVariations;
     }
 
     private List<Partition> generatePartitions(List<SelectedFeature> selected) {
@@ -660,11 +727,8 @@ public class MainApp extends Application {
 
             for (TreeItem<String> labelNode : varNode.getChildren()) {
                 if (((CheckBoxTreeItem<String>) labelNode).isSelected()) {
-                    String nodeValue = labelNode.getValue();
-                    boolean isNot = nodeValue.startsWith("not ");
-                    String actualLabel = isNot ? nodeValue.substring(4) : nodeValue;
-
-                    list.add(new SelectedFeature(variable, actualLabel, attributeExtractors.get(varName), isNot));
+                    String actualLabel = labelNode.getValue();
+                    list.add(new SelectedFeature(variable, actualLabel, attributeExtractors.get(varName), false));
                 }
             }
         }
